@@ -27,7 +27,7 @@
             max-width: 400px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
         }
         .card {
             background-color: #1e261d;
@@ -35,14 +35,14 @@
             border-radius: 12px;
             padding: 16px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .info {
+        .card-header {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
+            justify-content: space-between;
+            align-items: center;
         }
         .name {
             font-weight: bold;
@@ -50,20 +50,54 @@
         }
         .elo {
             color: #ccff00;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .comment-input {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #121811;
+            border: 1px solid #2d3b2b;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
             font-size: 14px;
+            outline: none;
+        }
+        .comment-input:focus {
+            border-color: #ccff00;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
         }
         .btn {
-            background-color: #ccff00;
-            color: #000000;
+            flex: 1;
             border: none;
-            padding: 10px 16px;
+            padding: 10px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: transform 0.1s ease, opacity 0.2s ease;
         }
         .btn:active {
             transform: scale(0.95);
+        }
+        .btn-plus {
+            background-color: #ccff00;
+            color: #000;
+        }
+        .btn-minus {
+            background-color: #ff4d4d;
+            color: #fff;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -76,6 +110,8 @@
         const SUPABASE_URL = 'https://onkujrlrrtraxiassmqh.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_KbJ4S1m1yt1zM6jtyM8UQw_FOJmqGe4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let isSubmitting = false;
 
         async function fetchStaff() {
             const { data, error } = await supabaseClient
@@ -95,28 +131,51 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div class="info">
+                    <div class="card-header">
                         <div class="name">${item.name}</div>
-                        <div class="elo">Рейтинг Elo: ${item.elo}</div>
+                        <div class="elo">${item.elo > 0 ? '+' : ''}${item.elo} Elo</div>
                     </div>
-                    <button class="btn" onclick="vote(${item.id}, ${item.elo})">Оценить</button>
+                    <input type="text" class="comment-input" id="comment-${item.id}" placeholder="Напишите отзыв или комментарий...">
+                    <div class="btn-group">
+                        <button class="btn btn-plus" onclick="vote(${item.id}, ${item.elo}, 15, 'plus')">+15 (Одобрить)</button>
+                        <button class="btn btn-minus" onclick="vote(${item.id}, ${item.elo}, -15, 'minus')">-15 (Замечание)</button>
+                    </div>
                 `;
                 listContainer.appendChild(card);
             });
         }
 
-        async function vote(id, currentElo) {
-            const newElo = currentElo + 15;
-            const { error } = await supabaseClient
+        async function vote(id, currentElo, delta, type) {
+            if (isSubmitting) return;
+            
+            const commentInput = document.getElementById(`comment-${id}`);
+            const commentText = commentInput ? commentInput.value.trim() : '';
+
+            isSubmitting = true;
+
+            // 1. Сохраняем комментарий в базу
+            const { error: reviewError } = await supabaseClient
+                .from('reviews')
+                .insert([{ staff_id: id, vote_type: type, comment: commentText }]);
+
+            if (reviewError) {
+                console.error('Ошибка записи отзыва:', reviewError);
+            }
+
+            // 2. Обновляем Elo
+            const newElo = currentElo + delta;
+            const { error: eloError } = await supabaseClient
                 .from('staff')
                 .update({ elo: newElo })
                 .eq('id', id);
 
-            if (error) {
+            if (eloError) {
                 alert('Ошибка при сохранении голоса');
             } else {
                 fetchStaff();
             }
+
+            isSubmitting = false;
         }
 
         fetchStaff();
