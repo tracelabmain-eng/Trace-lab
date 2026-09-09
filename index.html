@@ -7,43 +7,58 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 15px; margin: 0; }
+    body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 15px; margin: 0; padding-bottom: 80px; }
     .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .card h3 { margin: 0 0 5px 0; color: #333; }
     .elo { font-size: 18px; font-weight: bold; color: #007bff; margin-bottom: 10px; }
-    input[type="text"] { width: 90%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+    input[type="text"], input[type="number"] { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
     button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
     .btn-plus { background: #28a745; color: white; margin-right: 5px; }
     .btn-minus { background: #dc3545; color: white; }
-    .admin-btn { position: fixed; top: 10px; right: 10px; opacity: 0.5; background: #000; color: #fff; border: none; padding: 6px 12px; border-radius: 5px; font-size: 12px; }
-    .admin-status { color: #d9534f; font-weight: bold; margin-bottom: 10px; display: none; background: #fdf7f7; padding: 8px; border: 1px solid #d9534f; border-radius: 5px; }
-    .modal { display: none; position: fixed; top: 5%; left: 5%; width: 85%; height: 85%; background: white; z-index: 1000; padding: 20px; border: 2px solid #000; overflow-y: auto; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-    .user-info { font-size: 12px; color: #666; margin-bottom: 15px; }
+    
+    /* Плавающая сворачиваемая Админка */
+    .admin-floating-btn { position: fixed; top: 10px; right: 10px; z-index: 999; background: #000; color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 12px; }
+    .admin-widget { display: none; position: fixed; bottom: 10px; right: 10px; left: 10px; max-height: 80vh; background: white; z-index: 1000; padding: 15px; border: 2px solid #333; overflow-y: auto; border-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.3); }
+    .admin-widget.minimized { height: 45px; overflow: hidden; padding: 8px 15px; background: #222; color: white; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .user-info { font-size: 13px; color: #555; background: #e9ecef; padding: 8px; border-radius: 5px; margin-bottom: 15px; }
+    .badge { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
   </style>
 </head>
 <body>
 
-  <!-- Кнопка Админки -->
-  <button class="admin-btn" onclick="openAdminPanel()">⚙️ Admin</button>
+  <button class="admin-floating-btn" onclick="openAdminPanel()">⚙️ Admin</button>
 
   <h2>Рейтинг Воспитателей</h2>
-  <div id="user-display" class="user-info">Авторизация...</div>
-  <div id="admin-indicator" class="admin-status">👑 Режим Администратора (КД отключён)</div>
+  <div id="user-display" class="user-info">Загрузка профиля...</div>
   
   <div id="staff-list">Загрузка данных...</div>
 
-  <!-- Модальное окно Админки -->
-  <div id="admin-modal" class="modal">
-    <h2>🔒 Админ-Панель</h2>
-    <button onclick="closeAdminPanel()" style="background: #333; color: #fff; margin-bottom: 15px;">❌ Выйти из Админки</button>
-    <hr>
-    <h3>Установить Elo вручную</h3>
-    <input type="number" id="admin-staff-id" placeholder="ID (Севара = 2)" style="width: 120px;">
-    <input type="number" id="admin-new-elo" placeholder="Новый Elo" style="width: 150px;">
-    <button onclick="setStaffElo()" style="background: #007bff; color: white;">Сохранить</button>
-    <hr>
-    <h3>Отзывы на модерации</h3>
-    <div id="pending-comments"></div>
+  <!-- Плавающий виджет Админки -->
+  <div id="admin-widget" class="admin-widget">
+    <div class="admin-header">
+      <h3 style="margin:0;" id="admin-title">👑 Админ-Панель</h3>
+      <div>
+        <button onclick="toggleMinimizeAdmin()" style="background:#6c757d; color:white; padding:4px 8px;" id="min-btn">➖ Свернуть</button>
+        <button onclick="closeAdminPanel()" style="background:#dc3545; color:white; padding:4px 8px;">❌ Выйти</button>
+      </div>
+    </div>
+
+    <div id="admin-content">
+      <hr>
+      <h4>Изменить Elo вручную</h4>
+      <select id="admin-staff-select" style="width:100%; padding:8px; margin-bottom:8px;"></select>
+      <input type="number" id="admin-new-elo" placeholder="Новое значение Elo">
+      <button onclick="setStaffElo()" style="background:#007bff; color:white; width:100%;">Сохранить Elo</button>
+
+      <hr>
+      <h4>Отзывы на модерации</h4>
+      <div id="pending-comments">Загрузка...</div>
+
+      <hr>
+      <h4>Управление пользователями</h4>
+      <div id="users-list">Загрузка...</div>
+    </div>
   </div>
 
   <script>
@@ -51,15 +66,13 @@
     const SUPABASE_KEY = 'sb_publishable_KbJ4S1m1yt1zM6jtyM8UQw_FOJmqGe4';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     const tg = window.Telegram?.WebApp;
     tg?.expand();
 
-    // Данные из Telegram
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUserId = tgUser ? String(tgUser.id) : "pc_dev_user_1";
-    
-    // Авто-определение ника
+    const currentUsername = tgUser?.username ? "@" + tgUser.username : "без_юзернейма";
+
     let autoNickname = "Пользователь";
     if (tgUser) {
       if (tgUser.first_name) autoNickname = tgUser.first_name + (tgUser.last_name ? " " + tgUser.last_name : "");
@@ -68,105 +81,114 @@
 
     let currentUser = null;
     let isAdmin = false;
+    let staffMap = {};
 
     window.addEventListener('DOMContentLoaded', async () => {
       await initUser();
       await loadStaff();
     });
 
-    // Авторизация без prompt
     async function initUser() {
-      let { data: user } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('telegram_id', currentUserId)
-        .maybeSingle();
+      let { data: user } = await supabaseClient.from('users').select('*').eq('telegram_id', currentUserId).maybeSingle();
 
       if (!user) {
-        const { data: newUser, error: createError } = await supabaseClient
-          .from('users')
-          .insert([{ 
-            telegram_id: currentUserId, 
-            nickname: autoNickname 
-          }])
-          .select()
-          .single();
-
-        if (createError) {
-          currentUser = { telegram_id: currentUserId, nickname: autoNickname, last_vote_time: null };
-        } else {
-          currentUser = newUser;
-        }
+        const { data: newUser } = await supabaseClient.from('users').insert([{ 
+          telegram_id: currentUserId, 
+          nickname: autoNickname,
+          username: currentUsername,
+          warnings: 0
+        }]).select().single();
+        currentUser = newUser || { telegram_id: currentUserId, nickname: autoNickname, warnings: 0 };
       } else {
         currentUser = user;
+        if (user.username !== currentUsername) {
+          await supabaseClient.from('users').update({ username: currentUsername }).eq('telegram_id', currentUserId);
+        }
       }
 
-      document.getElementById('user-display').innerText = `Вы вошли как: ${currentUser.nickname}`;
+      document.getElementById('user-display').innerHTML = `
+        <b>Юзер:</b> ${currentUser.nickname} | <b>TG ID:</b> ${currentUser.telegram_id} (${currentUser.username || 'no_tag'}) 
+        ${currentUser.warnings ? `<span class="badge">Варны: ${currentUser.warnings}</span>` : ''}
+      `;
     }
 
-    // Загрузка списка воспитателей
     async function loadStaff() {
       const { data: staff, error } = await supabaseClient.from('staff').select('*').order('id');
       const container = document.getElementById('staff-list');
+      const select = document.getElementById('admin-staff-select');
       
       if (error) {
-        container.innerHTML = `<p style="color:red"><b>Ошибка доступа к базе!</b><br>Проверьте, отключен ли RLS у таблиц в Supabase.</p>`;
+        container.innerHTML = `<p style="color:red">Ошибка доступа к БД! Проверьте RLS.</p>`;
         return;
       }
 
       container.innerHTML = '';
+      select.innerHTML = '';
+      staffMap = {};
+
       if (staff && staff.length > 0) {
         staff.forEach(s => {
+          staffMap[s.id] = s.name;
+          select.innerHTML += `<option value="${s.id}">ID ${s.id} - ${s.name} (Сейчас: ${s.elo})</option>`;
+          
           container.innerHTML += `
             <div class="card">
               <h3>${s.name}</h3>
               <div class="elo">Elo: ${s.elo}</div>
               <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off">
               <div>
-                <button class="btn-plus" onclick="sendVote(${s.id}, 'лайк')">+15 Elo</button>
-                <button class="btn-minus" onclick="sendVote(${s.id}, 'дизлайк')">-15 Elo</button>
+                <button class="btn-plus" onclick="sendVote(${s.id}, 'plus')">+15 Elo</button>
+                <button class="btn-minus" onclick="sendVote(${s.id}, 'minus')">-15 Elo</button>
               </div>
             </div>
           `;
         });
-      } else {
-        container.innerHTML = '<p>Список воспитателей пуст.</p>';
       }
     }
 
-    // Отправка голоса и комментария
-    async function sendVote(staffId, type) {
+    async function sendVote(staffId, voteType) {
       if (!currentUser) await initUser();
+
+      // Проверка бана/КД
+      if (!isAdmin && currentUser.ban_until) {
+        const banEnd = new Date(currentUser.ban_until).getTime();
+        if (banEnd > new Date().getTime()) {
+          const leftMs = banEnd - new Date().getTime();
+          const leftMin = Math.ceil(leftMs / 60000);
+          alert(`Вам выдан временный бан/КД! Осталось: ${Math.floor(leftMin / 60)} ч ${leftMin % 60} мин.`);
+          return;
+        }
+      }
 
       const input = document.getElementById(`comment-${staffId}`);
       const commentText = input ? input.value.trim() : "";
 
       if (!commentText || commentText.length < 10) {
-        alert("Пожалуйста, напишите отзыв минимум из 10 символов!");
+        alert("Напишите отзыв минимум из 10 символов!");
         return;
       }
 
-      // Проверка КД
       if (!isAdmin && currentUser.last_vote_time) {
         const lastVote = new Date(currentUser.last_vote_time).getTime();
         const diffSeconds = Math.floor((new Date().getTime() - lastVote) / 1000);
-
         if (diffSeconds < 300) {
           const wait = 300 - diffSeconds;
-          alert(`Подождите еще ${Math.floor(wait / 60)} мин ${wait % 60} сек перед следующим голосом.`);
+          alert(`КД! Подождите ${Math.floor(wait / 60)} мин ${wait % 60} сек.`);
           return;
         }
       }
 
-      const { error: commentErr } = await supabaseClient.from('comments').insert([{
+      const { error } = await supabaseClient.from('comments').insert([{
         teacher_id: staffId,
         user_nickname: currentUser.nickname + (isAdmin ? " [ADMIN]" : ""),
-        text: `[${type}] ${commentText}`,
+        user_telegram_id: currentUser.telegram_id,
+        text: commentText,
+        vote_type: voteType,
         status: 'pending'
       }]);
 
-      if (commentErr) {
-        alert("Ошибка при отправке отзыва! Проверьте таблицу 'comments'.");
+      if (error) {
+        alert("Ошибка отправки! Проверьте таблицу comments.");
         return;
       }
 
@@ -175,44 +197,51 @@
       currentUser.last_vote_time = nowISO;
 
       if (input) input.value = "";
-      alert(isAdmin ? "Отзыв отправлен без КД (как Админ)!" : "Отзыв отправлен на модерацию!");
+      alert(isAdmin ? "Отзыв отправлен без КД (Режим админа)!" : "Отзыв отправлен на модерацию!");
     }
 
-    // Админка
+    /* Логика сворачиваемой Админки */
     function openAdminPanel() {
-      const pass = prompt("Введи пароль админа:");
-      if (pass !== "admin123") {
-        alert("Неверный пароль!");
-        return;
+      if (!isAdmin) {
+        const pass = prompt("Пароль админа:");
+        if (pass !== "admin123") return alert("Неверный пароль!");
+        isAdmin = true;
       }
-
-      isAdmin = true;
-      document.getElementById('admin-indicator').style.display = 'block';
-      document.getElementById('admin-modal').style.display = 'block';
+      document.getElementById('admin-widget').style.display = 'block';
       loadPendingComments();
+      loadUsersList();
+    }
+
+    function toggleMinimizeAdmin() {
+      const widget = document.getElementById('admin-widget');
+      const btn = document.getElementById('min-btn');
+      const content = document.getElementById('admin-content');
+
+      if (widget.classList.contains('minimized')) {
+        widget.classList.remove('minimized');
+        content.style.display = 'block';
+        btn.innerText = '➖ Свернуть';
+      } else {
+        widget.classList.add('minimized');
+        content.style.display = 'none';
+        btn.innerText = '🔲 Развернуть';
+      }
     }
 
     function closeAdminPanel() {
       isAdmin = false;
-      document.getElementById('admin-indicator').style.display = 'none';
-      document.getElementById('admin-modal').style.display = 'none';
-      alert("Вы вышли из админ-панели. Режим КД снова включён.");
+      document.getElementById('admin-widget').style.display = 'none';
+      alert("Вы вышли из админ-панели.");
     }
 
     async function setStaffElo() {
-      const id = document.getElementById('admin-staff-id').value;
+      const id = document.getElementById('admin-staff-select').value;
       const newElo = document.getElementById('admin-new-elo').value;
+      if (!id || !newElo) return alert("Заполните Elo!");
 
-      if (!id || !newElo) return alert("Заполните оба поля!");
-
-      const { error } = await supabaseClient.from('staff').update({ elo: parseInt(newElo) }).eq('id', parseInt(id));
-      
-      if (error) {
-        alert("Ошибка сохранения! Проверьте RLS таблицы 'staff'.");
-      } else {
-        alert("Рейтинг обновлён!");
-        loadStaff();
-      }
+      await supabaseClient.from('staff').update({ elo: parseInt(newElo) }).eq('id', parseInt(id));
+      alert("Elo обновлено!");
+      loadStaff();
     }
 
     async function loadPendingComments() {
@@ -222,13 +251,16 @@
 
       if (comments) {
         comments.forEach(c => {
+          const teacherName = staffMap[c.teacher_id] || `ID ${c.teacher_id}`;
+          const typeLabel = c.vote_type === 'plus' ? '🟢 +15 Elo' : '🔴 -15 Elo';
+          
           container.innerHTML += `
-            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 8px; border-radius: 5px;">
-              <p style="margin:2px 0;"><b>Ник:</b> ${c.user_nickname}</p>
+            <div style="border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: #fafafa;">
+              <p style="margin:2px 0;"><b>Кому:</b> ${teacherName} | <b>Тип:</b> ${typeLabel}</p>
+              <p style="margin:2px 0;"><b>Автор:</b> ${c.user_nickname} (ID: ${c.user_telegram_id})</p>
               <p style="margin:2px 0;"><b>Текст:</b> ${c.text}</p>
-              <div style="margin-top: 8px;">
-                <button onclick="approveComment(${c.id}, ${c.teacher_id}, 15)" style="background:green; color:white;">✅ +15 Elo</button>
-                <button onclick="approveComment(${c.id}, ${c.teacher_id}, -15)" style="background:orange; color:white;">✅ -15 Elo</button>
+              <div style="margin-top: 5px;">
+                <button onclick="approveComment(${c.id}, ${c.teacher_id}, '${c.vote_type}')" style="background:green; color:white;">✅ Принять</button>
                 <button onclick="rejectComment(${c.id})" style="background:red; color:white;">❌ Отклонить</button>
               </div>
             </div>
@@ -237,11 +269,13 @@
       }
     }
 
-    async function approveComment(commentId, staffId, eloDelta) {
+    async function approveComment(commentId, staffId, voteType) {
+      const delta = voteType === 'plus' ? 15 : -15;
       await supabaseClient.from('comments').update({ status: 'approved' }).eq('id', commentId);
+      
       const { data: s } = await supabaseClient.from('staff').select('elo').eq('id', staffId).single();
       if (s) {
-        await supabaseClient.from('staff').update({ elo: s.elo + eloDelta }).eq('id', staffId);
+        await supabaseClient.from('staff').update({ elo: s.elo + delta }).eq('id', staffId);
       }
       loadPendingComments();
       loadStaff();
@@ -250,6 +284,56 @@
     async function rejectComment(commentId) {
       await supabaseClient.from('comments').update({ status: 'rejected' }).eq('id', commentId);
       loadPendingComments();
+    }
+
+    async function loadUsersList() {
+      const { data: users } = await supabaseClient.from('users').select('*');
+      const container = document.getElementById('users-list');
+      container.innerHTML = users ? '' : 'Пусто';
+
+      if (users) {
+        users.forEach(u => {
+          container.innerHTML += `
+            <div style="border-bottom: 1px solid #ccc; padding: 5px 0; font-size: 12px;">
+              <b>${u.nickname}</b> (${u.username || 'без_юзернейма'}) | ID: ${u.telegram_id}<br>
+              Варны: ${u.warnings || 0}
+              <div style="margin-top:3px;">
+                <button onclick="changeUserNick('${u.telegram_id}')" style="font-size:10px;">✏️ Ник</button>
+                <button onclick="addWarning('${u.telegram_id}', ${u.warnings || 0})" style="font-size:10px; background:orange; color:white;">⚠️ Варн</button>
+                <button onclick="giveCustomBan('${u.telegram_id}')" style="font-size:10px; background:red; color:white;">⏳ КД</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    async function changeUserNick(userId) {
+      const newNick = prompt("Введите новый никнейм:");
+      if (!newNick) return;
+      await supabaseClient.from('users').update({ nickname: newNick.trim() }).eq('telegram_id', userId);
+      alert("Ник обновлен!");
+      loadUsersList();
+      initUser();
+    }
+
+    async function addWarning(userId, currentWarns) {
+      await supabaseClient.from('users').update({ warnings: currentWarns + 1 }).eq('telegram_id', userId);
+      alert("Предупреждение выдано!");
+      loadUsersList();
+    }
+
+    async function giveCustomBan(userId) {
+      const hours = prompt("На сколько ЧАСОВ выдать КД/бан?", "1");
+      const mins = prompt("На сколько МИНУТ выдать КД/бан?", "0");
+      if (hours === null || mins === null) return;
+
+      const totalMs = (parseInt(hours || 0) * 3600 + parseInt(mins || 0) * 60) * 1000;
+      const banUntil = new Date(new Date().getTime() + totalMs).toISOString();
+
+      await supabaseClient.from('users').update({ ban_until: banUntil }).eq('telegram_id', userId);
+      alert(`КД выдан на ${hours} ч ${mins} мин!`);
+      loadUsersList();
     }
   </script>
 </body>
