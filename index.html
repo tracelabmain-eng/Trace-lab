@@ -22,14 +22,14 @@
 </head>
 <body>
 
-  <!-- Скрытая кнопка админки -->
+  <!-- Скрытая кнопка Админки -->
   <button class="admin-btn" onclick="openAdminPanel()">⚙️ Admin</button>
 
   <h2>Рейтинг Воспитателей</h2>
   <div id="admin-indicator" class="admin-status">👑 Режим Администратора (КД отключён)</div>
   <div id="staff-list">Загрузка...</div>
 
-  <!-- Окно Админки -->
+  <!-- Модальное окно Админки -->
   <div id="admin-modal" class="modal">
     <h2>🔒 Админ-Панель</h2>
     <button onclick="document.getElementById('admin-modal').style.display='none'">Закрыть</button>
@@ -44,26 +44,27 @@
   </div>
 
   <script>
-    // 1. ВСТАВЬТЕ СВОИ ДАННЫЕ ИЗ SUPABASE
-    const SUPABASE_URL = 'https://YOUR-SUPABASE-URL.supabase.co';
-    const SUPABASE_KEY = 'YOUR-SUPABASE-ANON-KEY';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Подключение к вашей базе Supabase
+    const SUPABASE_URL = 'https://onkujrlrrtraxiassmqh.supabase.co'; 
+    const SUPABASE_KEY = 'sb_publishable_KbJ4S1m1yt1zM6jtyM8UQw_FOJmqGe4';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const tg = window.Telegram?.WebApp;
     tg?.expand();
     const currentUserId = tg?.initDataUnsafe?.user ? String(tg.initDataUnsafe.user.id) : "pc_dev_test_user"; 
 
     let currentUser = null;
-    let isAdmin = false; // Статус админа (по умолчанию false)
+    let isAdmin = false;
 
     window.addEventListener('DOMContentLoaded', async () => {
       await checkAuth();
       await loadStaff();
     });
 
-    // Регистрация по нику
+    // Авторизация / Ввод ника
     async function checkAuth() {
-      let { data: user } = await supabase.from('users').select('*').eq('telegram_id', currentUserId).single();
+      let { data: user } = await supabaseClient.from('users').select('*').eq('telegram_id', currentUserId).single();
 
       if (!user) {
         let nickname = prompt("Введи свой никнейм для академии:");
@@ -71,7 +72,7 @@
           nickname = prompt("Ник слишком короткий! Введи понятный никнейм:");
         }
         
-        const { data: newUser } = await supabase
+        const { data: newUser } = await supabaseClient
           .from('users')
           .insert([{ telegram_id: currentUserId, nickname: nickname.trim() }])
           .select().single();
@@ -82,11 +83,16 @@
       }
     }
 
-    // Загрузка списка воспитательниц
+    // Загрузка воспитателей из таблицы staff
     async function loadStaff() {
-      const { data: staff } = await supabase.from('staff').select('*').order('id');
+      const { data: staff, error } = await supabaseClient.from('staff').select('*').order('id');
       const container = document.getElementById('staff-list');
       container.innerHTML = '';
+
+      if (error) {
+        container.innerHTML = '<p style="color:red">Ошибка подключения! Проверьте, отключен ли RLS в Supabase.</p>';
+        return;
+      }
 
       if (staff) {
         staff.forEach(s => {
@@ -105,7 +111,7 @@
       }
     }
 
-    // Отправка голоса с общим КД (5 минут для обычных юзеров, БЕЗ КД для админов)
+    // Отправка отзыва (с общим КД 5 минут для обычных юзеров и БЕЗ КД для админа)
     async function sendVote(staffId, type) {
       if (!currentUser) await checkAuth();
 
@@ -117,64 +123,62 @@
         return;
       }
 
-      // ПРОВЕРКА КД: Работает ТОЛЬКО если человек НЕ АДМИН
+      // Проверка общего КД
       if (!isAdmin && currentUser.last_vote_time) {
         const lastVote = new Date(currentUser.last_vote_time).getTime();
         const diffSeconds = Math.floor((new Date().getTime() - lastVote) / 1000);
 
-        if (diffSeconds < 300) { // 300 секунд = 5 минут на всё приложение
+        if (diffSeconds < 300) {
           const wait = 300 - diffSeconds;
           alert(`Общий таймер! Подожди еще ${Math.floor(wait / 60)} мин ${wait % 60} сек перед следующим голосом.`);
           return;
         }
       }
 
-      // Отправка отзыва
-      await supabase.from('comments').insert([{
+      await supabaseClient.from('comments').insert([{
         teacher_id: staffId,
         user_nickname: currentUser.nickname + (isAdmin ? " [ADMIN]" : ""),
         text: `[${type}] ${commentText}`,
         status: 'pending'
       }]);
 
-      // Обновляем время последнего голоса
       const nowISO = new Date().toISOString();
-      await supabase.from('users').update({ last_vote_time: nowISO }).eq('telegram_id', currentUserId);
+      await supabaseClient.from('users').update({ last_vote_time: nowISO }).eq('telegram_id', currentUserId);
       currentUser.last_vote_time = nowISO;
 
       if (input) input.value = "";
-      alert(isAdmin ? "Отзыв отправлен без КД (как админ)!" : "Отзыв отправлен админам на проверку!");
+      alert(isAdmin ? "Отзыв отправлен без КД (режим админа)!" : "Отзыв отправлен админам на проверку!");
     }
 
-    // Вход в Админку по паролю + включение БЕЗЛИМИТНОГО режима
+    // Вход в админку по паролю admin123
     function openAdminPanel() {
       const pass = prompt("Введи пароль админа:");
-      if (pass !== "admin123") { // Ваш секретный пароль
+      if (pass !== "admin123") {
         alert("Неверный пароль!");
         return;
       }
 
-      isAdmin = true; // Отключаем КД для текущей сессии
-      document.getElementById('admin-indicator').style.display = 'block'; // Показываем плашку админа
+      isAdmin = true;
+      document.getElementById('admin-indicator').style.display = 'block';
       document.getElementById('admin-modal').style.display = 'block';
       loadPendingComments();
     }
 
-    // Ручное изменение Elo
+    // Ручное изменение Elo через админку
     async function setStaffElo() {
       const id = document.getElementById('admin-staff-id').value;
       const newElo = document.getElementById('admin-new-elo').value;
 
       if (!id || !newElo) return alert("Заполни все поля!");
 
-      await supabase.from('staff').update({ elo: parseInt(newElo) }).eq('id', parseInt(id));
+      await supabaseClient.from('staff').update({ elo: parseInt(newElo) }).eq('id', parseInt(id));
       alert("Рейтинг сохранён!");
       loadStaff();
     }
 
-    // Загрузка нерассмотренных отзывов
+    // Загрузка списка отзывов на проверку
     async function loadPendingComments() {
-      const { data: comments } = await supabase.from('comments').select('*').eq('status', 'pending');
+      const { data: comments } = await supabaseClient.from('comments').select('*').eq('status', 'pending');
       const container = document.getElementById('pending-comments');
       container.innerHTML = comments && comments.length ? '' : '<p>Нет отзывов на проверке</p>';
 
@@ -194,17 +198,17 @@
     }
 
     async function approveComment(commentId, staffId, eloDelta) {
-      await supabase.from('comments').update({ status: 'approved' }).eq('id', commentId);
-      const { data: s } = await supabase.from('staff').select('elo').eq('id', staffId).single();
+      await supabaseClient.from('comments').update({ status: 'approved' }).eq('id', commentId);
+      const { data: s } = await supabaseClient.from('staff').select('elo').eq('id', staffId).single();
       if (s) {
-        await supabase.from('staff').update({ elo: s.elo + eloDelta }).eq('id', staffId);
+        await supabaseClient.from('staff').update({ elo: s.elo + eloDelta }).eq('id', staffId);
       }
       loadPendingComments();
       loadStaff();
     }
 
     async function rejectComment(commentId) {
-      await supabase.from('comments').update({ status: 'rejected' }).eq('id', commentId);
+      await supabaseClient.from('comments').update({ status: 'rejected' }).eq('id', commentId);
       loadPendingComments();
     }
   </script>
