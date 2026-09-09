@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Рейтинг Воспитателей v2.9.5</title>
+  <title>Рейтинг Воспитателей v2.9.6</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -406,9 +406,10 @@
       const isNaughty = warningsCount >= 4;
       const customStatus = currentUser.custom_status || null;
 
+      // Изменили "Варнов" на "Предупреждений"
       document.getElementById('user-display').innerHTML = `
         <b>Профиль:</b> ${currentUser.nickname} | <b>TG:</b> ${currentUser.username || 'без_тега'} 
-        ${warningsCount > 0 ? `<span class="badge">Варнов: ${warningsCount}</span>` : ''}
+        ${warningsCount > 0 ? `<span class="badge">Предупреждений: ${warningsCount}</span>` : ''}
         ${customStatus ? `<span class="badge-custom">${customStatus}</span>` : ''}
         ${isNaughty && !customStatus ? `<span class="badge-naughty">😈 Непослушный</span>` : ''}
       `;
@@ -734,22 +735,17 @@
         if (status === null) return;
         const targetId = String(userId);
         const formattedStatus = status.trim() ? status.trim() : null;
-        
-        const updateData = {};
-        if (formattedStatus !== null) updateData.custom_status = formattedStatus;
-        else updateData.custom_status = null;
 
-        let { error } = await supabaseClient.from('users').update(updateData).eq('telegram_id', targetId);
-
-        if (error && error.message.includes('custom_status')) {
-          showAlert("Внимание: Колонка 'custom_status' отсутствует в базе. Выполните SQL-запрос из инструкции.");
-          return;
-        }
+        const { error } = await supabaseClient.from('users').update({ custom_status: formattedStatus }).eq('telegram_id', targetId);
 
         if (error) {
-          showAlert("Ошибка сохранения статуса: " + error.message);
+          if (error.message.includes('custom_status')) {
+            showAlert("Внимание: Колонка 'custom_status' отсутствует в базе. Выполните SQL-запрос из инструкции.");
+          } else {
+            showAlert("Ошибка сохранения статуса: " + error.message);
+          }
         } else {
-          showAlert("Статус сохранен!");
+          showAlert("Статус успешно сохранен!");
           await loadUsersList();
           if (targetId === String(currentUserId)) await initUser();
         }
@@ -765,21 +761,16 @@
 
         const targetId = String(userId);
         const newWarns = parseInt(currentWarns || 0) + 1;
-        
-        const updateData = { warnings: newWarns };
-        if (reason.trim()) updateData.warning_reason = reason.trim();
 
-        let { error } = await supabaseClient.from('users').update(updateData).eq('telegram_id', targetId);
-
-        if (error && error.message.includes('warning_reason')) {
-          const fallback = await supabaseClient.from('users').update({ warnings: newWarns }).eq('telegram_id', targetId);
-          error = fallback.error;
-        }
+        const { error } = await supabaseClient.from('users').update({
+          warnings: newWarns,
+          warning_reason: reason.trim()
+        }).eq('telegram_id', targetId);
 
         if (error) {
           showAlert("Ошибка выдачи предупреждения: " + error.message);
         } else {
-          showAlert("Предупреждение выдано!");
+          showAlert("Предупреждение выписано!");
           await loadUsersList();
           if (targetId === String(currentUserId)) await initUser();
         }
@@ -789,17 +780,12 @@
     async function resetWarnings(userId) {
       const targetId = String(userId);
 
-      let { error } = await supabaseClient.from('users').update({ 
+      const { error } = await supabaseClient.from('users').update({ 
         warnings: 0,
         warning_reason: null,
-        custom_status: null
+        custom_status: null,
+        ban_until: null
       }).eq('telegram_id', targetId);
-
-      // Если в таблице нет новых колонок, делаем сброс только предупреждений
-      if (error && error.message.includes('column')) {
-        const fallback = await supabaseClient.from('users').update({ warnings: 0 }).eq('telegram_id', targetId);
-        error = fallback.error;
-      }
 
       if (error) {
         showAlert("Ошибка сброса: " + error.message);
