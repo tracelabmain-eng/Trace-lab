@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Рейтинг Воспитателей</title>
+  <title>Рейтинг Воспитателей v2</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -23,6 +23,18 @@
     .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .user-info { font-size: 13px; color: #555; background: #e9ecef; padding: 8px; border-radius: 5px; margin-bottom: 15px; }
     .badge { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+
+    /* Плашка версии слева внизу */
+    .version-tag {
+      position: fixed;
+      bottom: 8px;
+      left: 12px;
+      font-size: 11px;
+      color: #888;
+      font-weight: bold;
+      z-index: 900;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +45,9 @@
   <div id="user-display" class="user-info">Загрузка профиля...</div>
   
   <div id="staff-list">Загрузка данных...</div>
+
+  <!-- Плашка версии -->
+  <div class="version-tag">beta 0.1</div>
 
   <!-- Плавающий виджет Админки -->
   <div id="admin-widget" class="admin-widget">
@@ -69,6 +84,7 @@
     const tg = window.Telegram?.WebApp;
     tg?.expand();
 
+    // Чтение юзера строго из Telegram SDK
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUserId = tgUser ? String(tgUser.id) : "pc_dev_user_1";
     const currentUsername = tgUser?.username ? "@" + tgUser.username : "без_юзернейма";
@@ -107,13 +123,18 @@
       }
 
       document.getElementById('user-display').innerHTML = `
-        <b>Юзер:</b> ${currentUser.nickname} | <b>TG ID:</b> ${currentUser.telegram_id} (${currentUser.username || 'no_tag'}) 
+        <b>Профиль:</b> ${currentUser.nickname} | <b>TG:</b> ${currentUser.username || 'без_тега'} 
         ${currentUser.warnings ? `<span class="badge">Варны: ${currentUser.warnings}</span>` : ''}
       `;
     }
 
+    // Загрузка воспитателей С СОРТИРОВКОЙ ПО УБЫВАНИЮ ELO (order('elo', { ascending: false }))
     async function loadStaff() {
-      const { data: staff, error } = await supabaseClient.from('staff').select('*').order('id');
+      const { data: staff, error } = await supabaseClient
+        .from('staff')
+        .select('*')
+        .order('elo', { ascending: false });
+
       const container = document.getElementById('staff-list');
       const select = document.getElementById('admin-staff-select');
       
@@ -127,18 +148,18 @@
       staffMap = {};
 
       if (staff && staff.length > 0) {
-        staff.forEach(s => {
+        staff.forEach((s, index) => {
           staffMap[s.id] = s.name;
           select.innerHTML += `<option value="${s.id}">ID ${s.id} - ${s.name} (Сейчас: ${s.elo})</option>`;
           
           container.innerHTML += `
             <div class="card">
-              <h3>${s.name}</h3>
+              <h3>#${index + 1} ${s.name}</h3>
               <div class="elo">Elo: ${s.elo}</div>
               <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off">
               <div>
-                <button class="btn-plus" onclick="sendVote(${s.id}, 'plus')">+15 Elo</button>
-                <button class="btn-minus" onclick="sendVote(${s.id}, 'minus')">-15 Elo</button>
+                <button class="btn-plus" onclick="sendVote(${s.id}, 'plus')">+10 Elo</button>
+                <button class="btn-minus" onclick="sendVote(${s.id}, 'minus')">-10 Elo</button>
               </div>
             </div>
           `;
@@ -149,13 +170,13 @@
     async function sendVote(staffId, voteType) {
       if (!currentUser) await initUser();
 
-      // Проверка бана/КД
+      // Проверка банов из админки
       if (!isAdmin && currentUser.ban_until) {
         const banEnd = new Date(currentUser.ban_until).getTime();
         if (banEnd > new Date().getTime()) {
           const leftMs = banEnd - new Date().getTime();
           const leftMin = Math.ceil(leftMs / 60000);
-          alert(`Вам выдан временный бан/КД! Осталось: ${Math.floor(leftMin / 60)} ч ${leftMin % 60} мин.`);
+          alert(`Вам выдан временный КД/бан! Осталось: ${Math.floor(leftMin / 60)} ч ${leftMin % 60} мин.`);
           return;
         }
       }
@@ -168,12 +189,13 @@
         return;
       }
 
+      // АВТОМАТИЧЕСКИЙ КД 5 МИНУТ (300 СЕКУНД)
       if (!isAdmin && currentUser.last_vote_time) {
         const lastVote = new Date(currentUser.last_vote_time).getTime();
         const diffSeconds = Math.floor((new Date().getTime() - lastVote) / 1000);
         if (diffSeconds < 300) {
           const wait = 300 - diffSeconds;
-          alert(`КД! Подождите ${Math.floor(wait / 60)} мин ${wait % 60} сек.`);
+          alert(`Автоматический КД 5 минут! Подождите еще ${Math.floor(wait / 60)} мин ${wait % 60} сек.`);
           return;
         }
       }
@@ -200,7 +222,7 @@
       alert(isAdmin ? "Отзыв отправлен без КД (Режим админа)!" : "Отзыв отправлен на модерацию!");
     }
 
-    /* Логика сворачиваемой Админки */
+    /* Логика Админки */
     function openAdminPanel() {
       if (!isAdmin) {
         const pass = prompt("Пароль админа:");
@@ -252,7 +274,7 @@
       if (comments) {
         comments.forEach(c => {
           const teacherName = staffMap[c.teacher_id] || `ID ${c.teacher_id}`;
-          const typeLabel = c.vote_type === 'plus' ? '🟢 +15 Elo' : '🔴 -15 Elo';
+          const typeLabel = c.vote_type === 'plus' ? '🟢 +10 Elo' : '🔴 -10 Elo';
           
           container.innerHTML += `
             <div style="border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: #fafafa;">
@@ -269,8 +291,9 @@
       }
     }
 
+    // Принятие отзыва начислят/забирает +10 / -10 Elo
     async function approveComment(commentId, staffId, voteType) {
-      const delta = voteType === 'plus' ? 15 : -15;
+      const delta = voteType === 'plus' ? 10 : -10;
       await supabaseClient.from('comments').update({ status: 'approved' }).eq('id', commentId);
       
       const { data: s } = await supabaseClient.from('staff').select('elo').eq('id', staffId).single();
@@ -295,7 +318,7 @@
         users.forEach(u => {
           container.innerHTML += `
             <div style="border-bottom: 1px solid #ccc; padding: 5px 0; font-size: 12px;">
-              <b>${u.nickname}</b> (${u.username || 'без_юзернейма'}) | ID: ${u.telegram_id}<br>
+              <b>${u.nickname}</b> (${u.username || 'без_тега'}) | ID: ${u.telegram_id}<br>
               Варны: ${u.warnings || 0}
               <div style="margin-top:3px;">
                 <button onclick="changeUserNick('${u.telegram_id}')" style="font-size:10px;">✏️ Ник</button>
@@ -324,8 +347,8 @@
     }
 
     async function giveCustomBan(userId) {
-      const hours = prompt("На сколько ЧАСОВ выдать КД/бан?", "1");
-      const mins = prompt("На сколько МИНУТ выдать КД/бан?", "0");
+      const hours = prompt("На сколько ЧАСОВ выдать бан/КД?", "1");
+      const mins = prompt("На сколько МИНУТ выдать бан/КД?", "0");
       if (hours === null || mins === null) return;
 
       const totalMs = (parseInt(hours || 0) * 3600 + parseInt(mins || 0) * 60) * 1000;
