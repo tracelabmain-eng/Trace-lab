@@ -2,49 +2,155 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Рейтинг Воспитателей v2.9.6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Рейтинг Воспитателей</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
-    * { box-sizing: border-box; }
+    :root {
+      --bg-color: #f4f5f9;
+      --card-bg: #ffffff;
+      --primary: #007aff;
+      --primary-hover: #0062cc;
+      --success: #34c759;
+      --danger: #ff3b30;
+      --warning: #ff9500;
+      --info: #5856d6;
+      --text-main: #1c1c1e;
+      --text-muted: #8e8e93;
+      --border-color: #e5e5ea;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
     body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-      background-color: #f4f4f9; 
-      padding: 15px; 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      background-color: var(--bg-color); 
+      color: var(--text-main);
+      padding: 16px; 
       margin: 0; 
-      padding-bottom: 80px; 
+      padding-bottom: 90px; 
       -webkit-user-select: text;
       user-select: text;
     }
-    
-    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .menu-btn { background: #333; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-    .sidebar-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 2000; }
+    /* Top Bar */
+    .top-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 16px; 
+    }
+    .menu-btn { 
+      background: var(--card-bg); 
+      color: var(--text-main); 
+      border: 1px solid var(--border-color); 
+      padding: 10px 16px; 
+      border-radius: var(--radius-md); 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+    }
+    .menu-btn:active { transform: scale(0.97); }
+
+    /* Profile Header Box */
+    .profile-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+      border: 1px solid var(--border-color);
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .profile-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .profile-tag {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .badges-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    /* Sidebar */
+    .sidebar-overlay { 
+      display: none; 
+      position: fixed; 
+      top:0; left:0; width:100%; height:100%; 
+      background: rgba(0,0,0,0.4); 
+      backdrop-filter: blur(4px);
+      z-index: 2000; 
+    }
     .sidebar { 
       position: fixed; 
       top:0; 
-      left:-280px; 
-      width:280px; 
+      left:-290px; 
+      width:290px; 
       height:100%; 
-      background: white; 
+      background: var(--card-bg); 
       z-index: 2001; 
-      transition: 0.3s; 
-      padding: 20px; 
-      box-shadow: 2px 0 10px rgba(0,0,0,0.2); 
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+      padding: 24px 20px; 
+      box-shadow: 10px 0 30px rgba(0,0,0,0.1); 
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
     .sidebar.active { left: 0; }
-    .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-    .sidebar-menu-item { padding: 12px 10px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; color: #333; display: flex; align-items: center; gap: 10px; }
-    .sidebar-menu-item:hover, .sidebar-menu-item.active { background: #007bff; color: white; }
+    .sidebar-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 24px; 
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color); 
+    }
+    .sidebar-header h3 { margin: 0; font-size: 18px; font-weight: 700; }
+    .sidebar-menu-item { 
+      padding: 14px 14px; 
+      margin-bottom: 8px; 
+      border-radius: var(--radius-md); 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 15px;
+      color: var(--text-main); 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      transition: all 0.2s;
+    }
+    .sidebar-menu-item:hover, .sidebar-menu-item.active { 
+      background: var(--primary); 
+      color: white; 
+    }
 
     .sidebar-footer {
-      border-top: 1px solid #eee;
-      padding-top: 15px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -52,114 +158,195 @@
 
     .support-box {
       background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 10px;
-      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px;
       font-size: 12px;
-      color: #555;
+      color: #666;
     }
-
-    .support-box b {
-      color: #333;
-      display: block;
-      margin-bottom: 4px;
-    }
+    .support-box b { color: var(--text-main); display: block; margin-bottom: 4px; font-size: 13px; }
 
     .support-btn {
       width: 100%;
-      background: #17a2b8;
+      background: #10b981;
       color: white;
       border: none;
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
-      margin-top: 6px;
+      margin-top: 8px;
       transition: background 0.2s;
     }
-
-    .support-btn:active { background: #138496; }
+    .support-btn:active { opacity: 0.9; }
 
     .version-tag {
       display: inline-block;
       align-self: flex-start;
       background: #eee;
-      color: #666;
+      color: #777;
       font-size: 11px;
-      font-weight: bold;
-      padding: 6px 12px;
-      border-radius: 12px;
-      letter-spacing: 0.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
       cursor: pointer;
-      user-select: none;
-      transition: background 0.2s;
     }
-    .version-tag:active { background: #ddd; }
 
-    .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .card h3 { margin: 0 0 5px 0; color: #333; }
-    .elo { font-size: 18px; font-weight: bold; color: #007bff; margin-bottom: 10px; }
-    
+    /* Cards for Staff & Features */
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      color: var(--text-main);
+    }
+
+    .card { 
+      background: var(--card-bg); 
+      padding: 18px; 
+      border-radius: var(--radius-lg); 
+      margin-bottom: 14px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .staff-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .staff-name { margin: 0; font-size: 17px; font-weight: 700; }
+    .staff-rank { font-size: 20px; font-weight: 800; }
+
+    .elo-container {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(0, 122, 255, 0.08);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 15px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
     input[type="text"], input[type="number"], select { 
       width: 100%; 
-      padding: 10px; 
-      margin-bottom: 10px; 
-      border: 1px solid #ccc; 
-      border-radius: 5px; 
+      padding: 12px 14px; 
+      margin-bottom: 12px; 
+      border: 1px solid var(--border-color); 
+      border-radius: var(--radius-md); 
       font-size: 14px;
-      cursor: text !important;
+      background: #fafafa;
+      outline: none;
+      transition: border 0.2s;
     }
-    select { cursor: pointer !important; }
-    button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .btn-plus { background: #28a745; color: white; margin-right: 5px; }
-    .btn-minus { background: #dc3545; color: white; }
-    
-    .admin-widget { display: none; position: fixed; bottom: 10px; right: 10px; left: 10px; max-height: 80vh; background: white; z-index: 3000; padding: 15px; border: 2px solid #333; overflow-y: auto; border-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.3); }
-    .admin-widget.minimized { height: 45px; overflow: hidden; padding: 8px 15px; background: #222; color: white; }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .user-info { font-size: 13px; color: #555; background: #e9ecef; padding: 8px; border-radius: 5px; margin-bottom: 15px; }
-    
-    .badge { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    .badge-custom { background: #17a2b8; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 4px; }
-    .badge-naughty { background: #dc3545; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 4px; }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
 
-    .custom-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 5000; justify-content: center; align-items: center; }
-    .custom-modal { background: white; padding: 20px; border-radius: 10px; max-width: 320px; width: 90%; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .custom-modal input, .custom-modal select { margin-top: 10px; }
-    .custom-modal-btns { display: flex; justify-content: space-around; margin-top: 15px; gap: 10px; }
+    .vote-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    button { 
+      padding: 10px 16px; 
+      border: none; 
+      border-radius: var(--radius-md); 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .btn-plus { background: #e6f4ea; color: var(--success); flex: 1; border: 1px solid rgba(52, 199, 89, 0.2); }
+    .btn-plus:active { background: var(--success); color: white; }
+
+    .btn-minus { background: #fce8e6; color: var(--danger); flex: 1; border: 1px solid rgba(255, 59, 48, 0.2); }
+    .btn-minus:active { background: var(--danger); color: white; }
+
+    /* Admin Widget */
+    .admin-widget { 
+      display: none; 
+      position: fixed; 
+      bottom: 10px; right: 10px; left: 10px; 
+      max-height: 82vh; 
+      background: var(--card-bg); 
+      z-index: 3000; 
+      padding: 18px; 
+      border: 1px solid var(--border-color); 
+      overflow-y: auto; 
+      border-radius: var(--radius-lg); 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
+    }
+    .admin-widget.minimized { 
+      height: 50px; 
+      overflow: hidden; 
+      padding: 10px 16px; 
+      background: #1c1c1e; 
+      color: white; 
+    }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+    /* Badges */
+    .badge { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .badge-custom { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .badge-naughty { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+
+    /* Modal Overlay & Warning */
+    .custom-modal-overlay { 
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 5000; 
+      justify-content: center; align-items: center; 
+    }
+    .custom-modal { 
+      background: white; padding: 22px; border-radius: var(--radius-lg); 
+      max-width: 330px; width: 90%; text-align: center; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+    }
 
     .toast-message {
       position: fixed;
-      bottom: 20px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
       color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
       z-index: 6000;
       pointer-events: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       animation: fadeInOut 1.5s forwards;
     }
 
     @keyframes fadeInOut {
-      0% { opacity: 0; transform: translate(-50%, 10px); }
+      0% { opacity: 0; transform: translate(-50%, 15px); }
       20% { opacity: 1; transform: translate(-50%, 0); }
       80% { opacity: 1; transform: translate(-50%, 0); }
       100% { opacity: 0; transform: translate(-50%, -10px); }
     }
 
-    .warning-banner-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
-    .warning-banner { background: #fff3cd; border: 3px solid #ffc107; padding: 20px; border-radius: 15px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .warning-banner.banned { background: #f8d7da; border-color: #dc3545; }
-    .warning-title { color: #856404; font-size: 17px; font-weight: bold; margin-bottom: 8px; }
-    .warning-banner.banned .warning-title { color: #721c24; }
-    .warning-reason-box { background: #fff; border: 1px dashed #ffe8a1; padding: 12px; border-radius: 8px; margin: 12px 0; color: #333; font-size: 13px; text-align: left; }
-    .warning-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-    
+    .warning-banner-overlay { 
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); z-index: 4000; 
+      justify-content: center; align-items: center; padding: 20px; 
+    }
+    .warning-banner { 
+      background: #fff; border-top: 6px solid var(--warning); padding: 24px; 
+      border-radius: var(--radius-lg); width: 100%; max-width: 360px; text-align: center; 
+      box-shadow: 0 15px 35px rgba(0,0,0,0.25); 
+    }
+    .warning-banner.banned { border-top-color: var(--danger); }
+    .warning-title { color: var(--text-main); font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .warning-reason-box { background: #f8f9fa; border: 1px dashed var(--border-color); padding: 12px; border-radius: var(--radius-md); margin: 14px 0; color: #333; font-size: 13px; text-align: left; }
+
     .page-section { display: none; }
     .page-section.active { display: block; }
   </style>
@@ -167,25 +354,27 @@
 <body>
 
   <div class="top-bar">
-    <button class="menu-btn" onclick="openSidebar()">☰ Меню</button>
+    <button class="menu-btn" onclick="openSidebar()">
+      <span>☰</span> Меню
+    </button>
   </div>
 
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div>
       <div class="sidebar-header">
-        <h3 style="margin:0;">Навигация</h3>
-        <button onclick="closeSidebar()" style="background:none; border:none; font-size:20px;">❌</button>
+        <h3>Навигация</h3>
+        <button onclick="closeSidebar()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#8e8e93;">✕</button>
       </div>
       <div class="sidebar-menu-item active" onclick="switchTab('ratings')">🏆 Рейтинг</div>
       <div class="sidebar-menu-item" onclick="switchTab('kompromat')">📁 Компромат 🔒</div>
-      <div class="sidebar-menu-item" onclick="switchTab('shifts')">📅 Смены воспитателей</div>
+      <div class="sidebar-menu-item" onclick="switchTab('shifts')">📅 Смены</div>
     </div>
 
     <div class="sidebar-footer">
       <div class="support-box">
-        <b>🐛 Есть идея или баг?</b>
-        <span>Нашли ошибку или хотите предложить улучшение?</span>
+        <b>🐛 Нашли баг или идею?</b>
+        <span>Обратитесь в поддержку для предложения изменений.</span>
         <button class="support-btn" onclick="contactSupport()">💬 Написать в поддержку</button>
       </div>
       
@@ -196,78 +385,83 @@
   </div>
 
   <div id="section-ratings" class="page-section active">
-    <h2>Рейтинг Воспитателей</h2>
-    <div id="user-display" class="user-info">Загрузка профиля...</div>
+    <h2 class="page-title">🏆 Рейтинг Воспитателей</h2>
+    
+    <div class="profile-card" id="user-display">
+      <div style="color: var(--text-muted); font-size: 13px;">Загрузка профиля...</div>
+    </div>
+
     <div id="staff-list">Загрузка данных...</div>
   </div>
 
   <div id="section-kompromat" class="page-section">
-    <h2>📁 Компромат</h2>
-    <div class="card" style="text-align: center; padding: 30px 15px;">
-      <h3>🔒 Раздел недоступен</h3>
-      <p style="color: #666; font-size: 14px;">Ведутся технические работы. Раздел будет доступен совсем скоро!</p>
-      <button style="background: #ffc107; color: #000; margin-top: 10px;">Скоро доступно</button>
+    <h2 class="page-title">📁 Компромат</h2>
+    <div class="card" style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 36px; margin-bottom: 10px;">🔒</div>
+      <h3 style="margin: 0 0 8px 0;">Раздел недоступен</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin: 0;">Ведутся технические работы. Раздел появится в скором времени.</p>
     </div>
   </div>
 
   <div id="section-shifts" class="page-section">
-    <h2>📅 Смены воспитателей</h2>
-    <div class="card" style="text-align: center; padding: 30px 15px;">
-      <h3>🛠 Ведутся технические работы</h3>
-      <p style="color: #666; font-size: 14px;">График и смены обновляются администрацией.</p>
+    <h2 class="page-title">📅 Смены воспитателей</h2>
+    <div class="card" style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 36px; margin-bottom: 10px;">🛠</div>
+      <h3 style="margin: 0 0 8px 0;">Обновление графика</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin: 0;">Расписание редактируется администрацией.</p>
     </div>
   </div>
 
   <div id="admin-widget" class="admin-widget">
     <div class="admin-header">
       <h3 style="margin:0;" id="admin-title">👑 Админ-Панель</h3>
-      <div>
-        <button onclick="toggleMinimizeAdmin()" style="background:#6c757d; color:white; padding:4px 8px;" id="min-btn">➖ Свернуть</button>
-        <button onclick="closeAdminPanel()" style="background:#dc3545; color:white; padding:4px 8px;">❌ Выйти</button>
+      <div style="display:flex; gap:6px;">
+        <button onclick="toggleMinimizeAdmin()" style="background:#8e8e93; color:white; padding:6px 10px;" id="min-btn">➖ Свернуть</button>
+        <button onclick="closeAdminPanel()" style="background:var(--danger); color:white; padding:6px 10px;">❌</button>
       </div>
     </div>
 
     <div id="admin-content">
-      <hr>
-      <h4>Изменить Elo вручную</h4>
-      <select id="admin-staff-select" style="width:100%; padding:8px; margin-bottom:8px;"></select>
+      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
+      <h4 style="margin: 0 0 8px 0;">Изменить Elo вручную</h4>
+      <select id="admin-staff-select"></select>
       <input type="number" id="admin-new-elo" placeholder="Новое значение Elo">
-      <button onclick="setStaffElo()" style="background:#007bff; color:white; width:100%;">Сохранить Elo</button>
+      <button onclick="setStaffElo()" style="background:var(--primary); color:white; width:100%; margin-bottom:12px;">Сохранить Elo</button>
 
-      <hr>
-      <h4>Отзывы на модерации</h4>
+      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
+      <h4 style="margin: 0 0 8px 0;">Отзывы на модерации</h4>
       <div id="pending-comments">Загрузка...</div>
 
-      <hr>
-      <h4>Управление пользователями</h4>
+      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
+      <h4 style="margin: 0 0 8px 0;">Управление пользователями</h4>
       <div id="users-list">Загрузка...</div>
     </div>
   </div>
 
   <div class="custom-modal-overlay" id="custom-modal-overlay">
     <div class="custom-modal">
-      <h4 id="modal-title" style="margin-top:0;">Уведомление</h4>
-      <p id="modal-text" style="font-size:14px; color:#444;"></p>
+      <h4 id="modal-title" style="margin: 0 0 8px 0; font-size: 16px;">Уведомление</h4>
+      <p id="modal-text" style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;"></p>
       <div id="modal-input-container"></div>
-      <div class="custom-modal-btns" id="modal-btns">
-        <button onclick="closeModal()" style="background:#007bff; color:white; width:100%;">ОК</button>
+      <div style="display: flex; gap: 8px; margin-top: 16px;" id="modal-btns">
+        <button onclick="closeModal()" style="background:var(--primary); color:white; width:100%;">ОК</button>
       </div>
     </div>
   </div>
 
   <div class="warning-banner-overlay" id="warning-banner-overlay">
     <div class="warning-banner" id="warning-banner-card">
-      <div class="warning-title" id="warning-banner-title">🚨 ⚠️ ВНИМАНИЕ! ⚠️ 🚨</div>
-      <p style="font-size: 12px; margin: 3px 0;" id="warning-count-text"></p>
+      <div class="warning-title" id="warning-banner-title">⚠️ ВНИМАНИЕ!</div>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0;" id="warning-count-text"></p>
       
       <div class="warning-reason-box">
-        <b>Причина / Нарушение:</b>
-        <div id="warning-banner-reason" style="margin-top: 5px; font-weight: 500;"></div>
+        <b style="font-size: 12px; color: var(--text-muted);">Причина:</b>
+        <div id="warning-banner-reason" style="margin-top: 4px; font-weight: 600; font-size: 14px;"></div>
       </div>
 
-      <p style="font-size: 11px; color: #666; margin: 5px 0;" id="warning-subtext"></p>
+      <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0;" id="warning-subtext"></p>
 
-      <div class="warning-actions" id="warning-action-buttons"></div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top: 16px;" id="warning-action-buttons"></div>
     </div>
   </div>
 
@@ -311,9 +505,7 @@
       toast.innerText = text;
       document.body.appendChild(toast);
 
-      setTimeout(() => {
-        if (toast.parentNode) toast.remove();
-      }, 1500);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 1500);
     }
 
     function handleVersionClick() {
@@ -334,7 +526,7 @@
       document.getElementById('modal-title').innerText = title;
       document.getElementById('modal-text').innerText = text;
       document.getElementById('modal-input-container').innerHTML = '';
-      document.getElementById('modal-btns').innerHTML = `<button onclick="closeModal()" style="background:#007bff; color:white; width:100%;">ОК</button>`;
+      document.getElementById('modal-btns').innerHTML = `<button onclick="closeModal()" style="background:var(--primary); color:white; width:100%;">ОК</button>`;
       document.getElementById('custom-modal-overlay').style.display = 'flex';
     }
 
@@ -344,8 +536,8 @@
       document.getElementById('modal-text').innerText = text;
       document.getElementById('modal-input-container').innerHTML = `<input type="text" id="modal-input-field" value="${defaultValue}">`;
       document.getElementById('modal-btns').innerHTML = `
-        <button onclick="submitPrompt()" style="background:#28a745; color:white; flex:1;">ОК</button>
-        <button onclick="closeModal()" style="background:#dc3545; color:white; flex:1;">Отмена</button>
+        <button onclick="submitPrompt()" style="background:var(--success); color:white; flex:1;">ОК</button>
+        <button onclick="closeModal()" style="background:var(--danger); color:white; flex:1;">Отмена</button>
       `;
       document.getElementById('custom-modal-overlay').style.display = 'flex';
       setTimeout(() => {
@@ -406,12 +598,16 @@
       const isNaughty = warningsCount >= 4;
       const customStatus = currentUser.custom_status || null;
 
-      // Изменили "Варнов" на "Предупреждений"
       document.getElementById('user-display').innerHTML = `
-        <b>Профиль:</b> ${currentUser.nickname} | <b>TG:</b> ${currentUser.username || 'без_тега'} 
-        ${warningsCount > 0 ? `<span class="badge">Предупреждений: ${warningsCount}</span>` : ''}
-        ${customStatus ? `<span class="badge-custom">${customStatus}</span>` : ''}
-        ${isNaughty && !customStatus ? `<span class="badge-naughty">😈 Непослушный</span>` : ''}
+        <div class="profile-header">
+          <span class="profile-name">${currentUser.nickname}</span>
+          <span class="profile-tag">${currentUser.username || 'без_тега'}</span>
+        </div>
+        <div class="badges-container">
+          ${warningsCount > 0 ? `<span class="badge">⚠️ Предупреждений: ${warningsCount}</span>` : ''}
+          ${customStatus ? `<span class="badge-custom">🏷️ ${customStatus}</span>` : ''}
+          ${isNaughty && !customStatus ? `<span class="badge-naughty">😈 Непослушный</span>` : ''}
+        </div>
       `;
 
       if (warningsCount > 0) {
@@ -425,37 +621,37 @@
         reasonEl.innerText = currentUser.warning_reason || "Причина не указана администратором.";
 
         if (warningsCount === 1) {
-          titleEl.innerText = "⚠️ ВНИМАНИЕ! 1-Е ПРЕДУПРЕЖДЕНИЕ";
-          countEl.innerText = "Ознакомьтесь с правилами и будьте аккуратнее.";
-          subtextEl.innerText = "Это ваше первое предупреждение. Пожалуйста, больше не нарушайте правила.";
+          titleEl.innerText = "⚠️ 1-е Предупреждение";
+          countEl.innerText = "Будьте внимательны с правилами.";
+          subtextEl.innerText = "Пожалуйста, воздержитесь от нарушений в дальнейшем.";
           actionContainer.innerHTML = `
-            <button onclick="acknowledgeWarning()" style="background: #28a745; color: white; padding: 10px; width: 100%;">👍 Я понял, больше не повторится</button>
-            <button onclick="contactSupport()" style="background: #17a2b8; color: white; padding: 10px; width: 100%;">💬 Написать в суппорт</button>
+            <button onclick="acknowledgeWarning()" style="background: var(--success); color: white;">👍 Понятно</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать в саппорт</button>
           `;
         } else if (warningsCount === 2) {
-          titleEl.innerText = "⚠️ ВНИМАНИЕ! 2-Е ПРЕДУПРЕЖДЕНИЕ";
-          countEl.innerText = "Будьте осторожны, это уже перебор!";
-          subtextEl.innerText = "Вы получили второе предупреждение. Следующее нарушение приведет к крайним мерам!";
+          titleEl.innerText = "⚠️ 2-е Предупреждение";
+          countEl.innerText = "Обратите внимание на выписанные замечания!";
+          subtextEl.innerText = "Следующие нарушения могут привести к блокировке.";
           actionContainer.innerHTML = `
-            <button onclick="acknowledgeWarning()" style="background: #28a745; color: white; padding: 10px; width: 100%;">👍 Я понял, больше не повторится</button>
-            <button onclick="contactSupport()" style="background: #17a2b8; color: white; padding: 10px; width: 100%;">💬 Написать в суппорт</button>
+            <button onclick="acknowledgeWarning()" style="background: var(--success); color: white;">👍 Понятно</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать в саппорт</button>
           `;
         } else if (warningsCount === 3) {
-          titleEl.innerText = "🚨 ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ (3/3)";
-          countEl.innerText = "Ещё один косяк, и ваш аккаунт улетит в бан!";
-          subtextEl.innerText = "Это последний шанс. 4-е предупреждение приведет к полной блокировке аккаунта!";
+          titleEl.innerText = "🚨 Последнее Предупреждение (3/3)";
+          countEl.innerText = "Вы на грани полной блокировки!";
+          subtextEl.innerText = "4-е предупреждение приведет к ограничению доступа.";
           actionContainer.innerHTML = `
-            <button onclick="acknowledgeWarning()" style="background: #28a745; color: white; padding: 10px; width: 100%;">👍 Я понял, больше не повторится</button>
-            <button onclick="contactSupport()" style="background: #17a2b8; color: white; padding: 10px; width: 100%;">💬 Написать в суппорт</button>
+            <button onclick="acknowledgeWarning()" style="background: var(--success); color: white;">👍 Понятно</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать в саппорт</button>
           `;
         } else {
           bannerCard.classList.add('banned');
-          titleEl.innerText = "⛔ АККАУНТ ЗАБЛОКИРОВАН";
-          countEl.innerText = "Это была последняя капля! Вы исчерпали все шансы.";
-          subtextEl.innerText = "Самостоятельно снять это предупреждение нельзя. Для разблокировки необходимо оплатить штраф.";
+          titleEl.innerText = "⛔ Аккаунт заблокирован";
+          countEl.innerText = "Вы превысили лимит допустимых нарушений.";
+          subtextEl.innerText = "Разблокировка возможна после обращения к администрации.";
           actionContainer.innerHTML = `
-            <button onclick="payFine()" style="background: #dc3545; color: white; padding: 10px; width: 100%;">💳 Оплатить штраф для разбана</button>
-            <button onclick="contactSupport()" style="background: #17a2b8; color: white; padding: 10px; width: 100%;">💬 Написать администратору</button>
+            <button onclick="payFine()" style="background: var(--danger); color: white;">💳 Оплатить разбан</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать администратору</button>
           `;
         }
 
@@ -467,18 +663,18 @@
 
     function acknowledgeWarning() {
       document.getElementById('warning-banner-overlay').style.display = 'none';
-      showAlert("Ожидайте, администратор проверит ваше обращение.", "Принято!");
+      showAlert("Запрос передан администратору.", "Принято");
     }
 
     function payFine() {
-      showAlert("Для оплаты штрафа и снятия блокировки свяжитесь с нашим администратором.", "Оплата штрафа");
+      showAlert("Для оплаты и снятия ограничений свяжитесь с поддержкой.", "Разблокировка");
     }
 
     function contactSupport() {
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink('https://t.me/tracelabsupport');
       } else {
-        showAlert("Напишите нашему администратору в Telegram: @tracelabsupport");
+        showAlert("Свяжитесь с поддержкой: @tracelabsupport");
       }
     }
 
@@ -493,7 +689,7 @@
       const select = document.getElementById('admin-staff-select');
       
       if (error) {
-        container.innerHTML = `<p style="color:red">Ошибка доступа к БД!</p>`;
+        container.innerHTML = `<p style="color:var(--danger)">Ошибка загрузки данных!</p>`;
         return;
       }
 
@@ -505,12 +701,20 @@
         staff.forEach((s, index) => {
           staffMap[s.id] = s.name;
           
+          let rankBadge = `#${index + 1}`;
+          if (index === 0) rankBadge = '🥇';
+          else if (index === 1) rankBadge = '🥈';
+          else if (index === 2) rankBadge = '🥉';
+
           container.innerHTML += `
             <div class="card">
-              <h3>#${index + 1} ${s.name}</h3>
-              <div class="elo">Elo: ${s.elo}</div>
+              <div class="staff-card-header">
+                <h3 class="staff-name">${s.name}</h3>
+                <span class="staff-rank">${rankBadge}</span>
+              </div>
+              <div class="elo-container">⭐ ${s.elo} Elo</div>
               <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off">
-              <div>
+              <div class="vote-btns">
                 <button class="btn-plus" onclick="sendVote(${s.id}, 'plus')">+10 Elo</button>
                 <button class="btn-minus" onclick="sendVote(${s.id}, 'minus')">-10 Elo</button>
               </div>
@@ -520,7 +724,7 @@
 
         const sortedById = [...staff].sort((a, b) => a.id - b.id);
         sortedById.forEach(s => {
-          select.innerHTML += `<option value="${s.id}">ID ${s.id} - ${s.name} (Сейчас: ${s.elo})</option>`;
+          select.innerHTML += `<option value="${s.id}">ID ${s.id} - ${s.name} (${s.elo} Elo)</option>`;
         });
       }
     }
@@ -529,7 +733,7 @@
       if (!currentUser) await initUser();
 
       if (!isAdmin && (currentUser.warnings || 0) >= 4) {
-        showAlert("Ваш аккаунт заблокирован за частые нарушения! Вы не можете оставлять отзывы.");
+        showAlert("Ваш аккаунт заблокирован за нарушения!");
         return;
       }
 
@@ -538,7 +742,7 @@
         if (banEnd > new Date().getTime()) {
           const leftMs = banEnd - new Date().getTime();
           const leftMin = Math.ceil(leftMs / 60000);
-          showAlert(`Вам выдан временный КД/бан! Осталось: ${Math.floor(leftMin / 60)} ч ${leftMin % 60} мин.`);
+          showAlert(`Вам выдан временный КД! Осталось: ${Math.floor(leftMin / 60)} ч ${leftMin % 60} мин.`);
           return;
         }
       }
@@ -547,7 +751,7 @@
       const commentText = input ? input.value.trim() : "";
 
       if (!commentText || commentText.length < 10) {
-        showAlert("Напишите отзыв минимум из 10 символов!");
+        showAlert("Отзыв должен содержать минимум 10 символов!");
         return;
       }
 
@@ -556,7 +760,7 @@
         const diffSeconds = Math.floor((new Date().getTime() - lastVote) / 1000);
         if (diffSeconds < 420) {
           const wait = 420 - diffSeconds;
-          showAlert(`Автоматический КД 7 минут! Подождите еще ${Math.floor(wait / 60)} мин ${wait % 60} сек.`);
+          showAlert(`Таймаут 7 минут! Подождите ${Math.floor(wait / 60)} мин ${wait % 60} сек.`);
           return;
         }
       }
@@ -571,7 +775,7 @@
       }]);
 
       if (error) {
-        showAlert("Ошибка отправки: " + error.message);
+        showAlert("Ошибка: " + error.message);
         return;
       }
 
@@ -580,7 +784,7 @@
       currentUser.last_vote_time = nowISO;
 
       if (input) input.value = "";
-      showAlert(isAdmin ? "Отзыв отправлен без КД (Режим админа)!" : "Отзыв отправлен на модерацию!");
+      showAlert(isAdmin ? "Отзыв отправлен (Админ)!" : "Отзыв отправлен на модерацию!");
     }
 
     function promptAdminPassword() {
@@ -589,7 +793,7 @@
         loadPendingComments();
         loadUsersList();
       } else {
-        showPrompt("Введите пароль админа:", "", (pass) => {
+        showPrompt("Введите пароль администратора:", "", (pass) => {
           if (pass === "admin123") {
             isAdmin = true;
             document.getElementById('admin-widget').style.display = 'block';
@@ -621,7 +825,7 @@
     function closeAdminPanel() {
       isAdmin = false;
       document.getElementById('admin-widget').style.display = 'none';
-      showAlert("Вы вышли из админ-панели.");
+      showAlert("Панель закрыта.");
     }
 
     async function setStaffElo() {
@@ -631,7 +835,7 @@
 
       const { error } = await supabaseClient.from('staff').update({ elo: parseInt(newElo) }).eq('id', parseInt(id));
       if (error) {
-        showAlert("Ошибка при сохранении Elo: " + error.message);
+        showAlert("Ошибка: " + error.message);
       } else {
         showAlert("Elo обновлено!");
         loadStaff();
@@ -641,7 +845,7 @@
     async function loadPendingComments() {
       const { data: comments } = await supabaseClient.from('comments').select('*').eq('status', 'pending');
       const container = document.getElementById('pending-comments');
-      container.innerHTML = comments && comments.length ? '' : '<p>Нет отзывов на проверке</p>';
+      container.innerHTML = comments && comments.length ? '' : '<p style="color:var(--text-muted); font-size:13px;">Нет отзывов на проверке</p>';
 
       if (comments) {
         comments.forEach(c => {
@@ -649,13 +853,13 @@
           const typeLabel = c.vote_type === 'plus' ? '🟢 +10 Elo' : '🔴 -10 Elo';
           
           container.innerHTML += `
-            <div style="border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: #fafafa;">
+            <div style="border: 1px solid var(--border-color); padding: 12px; margin-bottom: 8px; border-radius: var(--radius-md); background: #fafafa; font-size:13px;">
               <p style="margin:2px 0;"><b>Кому:</b> ${teacherName} | <b>Тип:</b> ${typeLabel}</p>
               <p style="margin:2px 0;"><b>Автор:</b> ${c.user_nickname} (ID: ${c.user_telegram_id})</p>
-              <p style="margin:2px 0;"><b>Текст:</b> ${c.text}</p>
-              <div style="margin-top: 5px;">
-                <button onclick="approveComment(${c.id}, ${c.teacher_id}, '${c.vote_type}')" style="background:green; color:white;">✅ Принять</button>
-                <button onclick="rejectComment(${c.id})" style="background:red; color:white;">❌ Отклонить</button>
+              <p style="margin:4px 0 8px 0; color:#444;"><b>Отзыв:</b> ${c.text}</p>
+              <div style="display:flex; gap:6px;">
+                <button onclick="approveComment(${c.id}, ${c.teacher_id}, '${c.vote_type}')" style="background:var(--success); color:white; flex:1;">✅ Принять</button>
+                <button onclick="rejectComment(${c.id})" style="background:var(--danger); color:white; flex:1;">❌ Отклонить</button>
               </div>
             </div>
           `;
@@ -685,7 +889,7 @@
       const container = document.getElementById('users-list');
       
       if (error) {
-        container.innerHTML = `<p style="color:red">Ошибка загрузки пользователей: ${error.message}</p>`;
+        container.innerHTML = `<p style="color:var(--danger)">Ошибка: ${error.message}</p>`;
         return;
       }
 
@@ -697,16 +901,16 @@
           const statusText = u.custom_status ? `🏷️ ${u.custom_status}` : (u.warnings >= 4 ? '😈 Непослушный' : '');
           
           container.innerHTML += `
-            <div style="border-bottom: 1px solid #ccc; padding: 8px 0; font-size: 12px;">
+            <div style="border-bottom: 1px solid var(--border-color); padding: 10px 0; font-size: 13px;">
               <b>${u.nickname}</b> (${u.username || 'без_тега'}) | ID: ${uId}<br>
-              Предупреждений: ${u.warnings || 0} ${statusText ? `| Status: <b>${statusText}</b>` : ''} 
-              ${u.warning_reason ? `<br><i>Причина: ${u.warning_reason}</i>` : ''}
-              <div style="margin-top:5px; display:flex; gap:3px; flex-wrap:wrap;">
-                <button onclick="changeUserNick('${uId}')" style="font-size:10px;">✏️ Ник</button>
-                <button onclick="setUserStatus('${uId}')" style="font-size:10px; background:#17a2b8; color:white;">🏷️ Выдать статус</button>
-                <button onclick="addWarningWithReason('${uId}', ${u.warnings || 0})" style="font-size:10px; background:orange; color:white;">⚠️ Выдать предупреждение</button>
-                <button onclick="resetWarnings('${uId}')" style="font-size:10px; background:green; color:white;">🔄 Сбросить всё</button>
-                <button onclick="giveCustomBan('${uId}')" style="font-size:10px; background:red; color:white;">⏳ КД</button>
+              <span style="color:var(--text-muted);">Предупреждений: ${u.warnings || 0} ${statusText ? `| Status: <b>${statusText}</b>` : ''}</span>
+              ${u.warning_reason ? `<br><span style="color:#d97706;"><i>Причина: ${u.warning_reason}</i></span>` : ''}
+              <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
+                <button onclick="changeUserNick('${uId}')" style="font-size:11px; padding:6px 10px; background:#e5e5ea; color:#333;">✏️ Ник</button>
+                <button onclick="setUserStatus('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--primary); color:white;">🏷️ Статус</button>
+                <button onclick="addWarningWithReason('${uId}', ${u.warnings || 0})" style="font-size:11px; padding:6px 10px; background:var(--warning); color:white;">⚠️ Варн</button>
+                <button onclick="resetWarnings('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--success); color:white;">🔄 Сброс</button>
+                <button onclick="giveCustomBan('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--danger); color:white;">⏳ КД</button>
               </div>
             </div>
           `;
@@ -721,7 +925,7 @@
         const { error } = await supabaseClient.from('users').update({ nickname: newNick.trim() }).eq('telegram_id', targetId);
         
         if (error) {
-          showAlert("Ошибка смены ника: " + error.message);
+          showAlert("Ошибка: " + error.message);
         } else {
           showAlert("Ник обновлен!");
           await loadUsersList();
@@ -731,7 +935,7 @@
     }
 
     function setUserStatus(userId) {
-      showPrompt("Введите новый статус (или оставьте пустым для удаления):", "Новичок", async (status) => {
+      showPrompt("Введите новый статус:", "Новичок", async (status) => {
         if (status === null) return;
         const targetId = String(userId);
         const formattedStatus = status.trim() ? status.trim() : null;
@@ -739,13 +943,9 @@
         const { error } = await supabaseClient.from('users').update({ custom_status: formattedStatus }).eq('telegram_id', targetId);
 
         if (error) {
-          if (error.message.includes('custom_status')) {
-            showAlert("Внимание: Колонка 'custom_status' отсутствует в базе. Выполните SQL-запрос из инструкции.");
-          } else {
-            showAlert("Ошибка сохранения статуса: " + error.message);
-          }
+          showAlert("Ошибка: " + error.message);
         } else {
-          showAlert("Статус успешно сохранен!");
+          showAlert("Статус сохранен!");
           await loadUsersList();
           if (targetId === String(currentUserId)) await initUser();
         }
@@ -755,7 +955,7 @@
     function addWarningWithReason(userId, currentWarns) {
       showPrompt("Укажите причину предупреждения:", "", async (reason) => {
         if (!reason || !reason.trim()) {
-          showAlert("Причина предупреждения не может быть пустой!");
+          showAlert("Причина не может быть пустой!");
           return;
         }
 
@@ -768,9 +968,9 @@
         }).eq('telegram_id', targetId);
 
         if (error) {
-          showAlert("Ошибка выдачи предупреждения: " + error.message);
+          showAlert("Ошибка: " + error.message);
         } else {
-          showAlert("Предупреждение выписано!");
+          showAlert("Предупреждение выдано!");
           await loadUsersList();
           if (targetId === String(currentUserId)) await initUser();
         }
@@ -790,16 +990,16 @@
       if (error) {
         showAlert("Ошибка сброса: " + error.message);
       } else {
-        showAlert("Сброс успешно выполнен!");
+        showAlert("Сброс выполнен!");
         await loadUsersList();
         if (targetId === String(currentUserId)) await initUser();
       }
     }
 
     function giveCustomBan(userId) {
-      showPrompt("На сколько ЧАСОВ выдать бан/КД?", "1", (hours) => {
+      showPrompt("Часов блокировки:", "1", (hours) => {
         if (hours === null) return;
-        showPrompt("На сколько МИНУТ выдать бан/КД?", "0", async (mins) => {
+        showPrompt("Минут блокировки:", "0", async (mins) => {
           if (mins === null) return;
           const targetId = String(userId);
           const totalMs = (parseInt(hours || 0) * 3600 + parseInt(mins || 0) * 60) * 1000;
@@ -807,11 +1007,7 @@
 
           const { error } = await supabaseClient.from('users').update({ ban_until: banUntil }).eq('telegram_id', targetId);
           if (error) {
-            if (error.message.includes('ban_until')) {
-              showAlert("Колонка 'ban_until' не найдена в базе. Выполните SQL-запрос из инструкции.");
-            } else {
-              showAlert("Ошибка выдачи КД: " + error.message);
-            }
+            showAlert("Ошибка: " + error.message);
           } else {
             showAlert(`КД выдан на ${hours} ч ${mins} мин!`);
             await loadUsersList();
