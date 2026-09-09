@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Рейтинг Воспитателей v2.9.3</title>
+  <title>Рейтинг Воспитателей v2.9.4</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -300,7 +300,7 @@
     tg?.expand();
 
     const tgUser = tg?.initDataUnsafe?.user;
-    const currentUserId = tgUser ? String(tgUser.id) : "pc_dev_user_1";
+    const currentUserId = String(tgUser ? tgUser.id : "pc_dev_user_1");
     const currentUsername = tgUser?.username ? "@" + tgUser.username : "без_юзернейма";
 
     let autoNickname = "Пользователь";
@@ -412,20 +412,20 @@
     }
 
     async function initUser() {
-      let { data: user } = await supabaseClient.from('users').select('*').eq('telegram_id', currentUserId).maybeSingle();
+      let { data: user } = await supabaseClient.from('users').select('*').eq('telegram_id', String(currentUserId)).maybeSingle();
 
       if (!user) {
         const { data: newUser } = await supabaseClient.from('users').insert([{ 
-          telegram_id: currentUserId, 
+          telegram_id: String(currentUserId), 
           nickname: autoNickname,
           username: currentUsername,
           warnings: 0
         }]).select().single();
-        currentUser = newUser || { telegram_id: currentUserId, nickname: autoNickname, warnings: 0 };
+        currentUser = newUser || { telegram_id: String(currentUserId), nickname: autoNickname, warnings: 0 };
       } else {
         currentUser = user;
         if (user.username !== currentUsername) {
-          await supabaseClient.from('users').update({ username: currentUsername }).eq('telegram_id', currentUserId);
+          await supabaseClient.from('users').update({ username: currentUsername }).eq('telegram_id', String(currentUserId));
         }
       }
 
@@ -509,7 +509,6 @@
     }
 
     async function loadStaff() {
-      // Сортируем: сначала по Elo (больше -> выше), при равном Elo — по ID (1, 2, 3...)
       const { data: staff, error } = await supabaseClient
         .from('staff')
         .select('*')
@@ -529,7 +528,6 @@
       staffMap = {};
 
       if (staff && staff.length > 0) {
-        // Заполняем главную страницу по порядку рейтинга (Elo)
         staff.forEach((s, index) => {
           staffMap[s.id] = s.name;
           
@@ -546,7 +544,6 @@
           `;
         });
 
-        // Заполняем селектор в Админ-Панели строго по ID (1, 2, 3...)
         const sortedById = [...staff].sort((a, b) => a.id - b.id);
         sortedById.forEach(s => {
           select.innerHTML += `<option value="${s.id}">ID ${s.id} - ${s.name} (Сейчас: ${s.elo})</option>`;
@@ -593,19 +590,19 @@
       const { error } = await supabaseClient.from('comments').insert([{
         teacher_id: staffId,
         user_nickname: currentUser.nickname + (isAdmin ? " [ADMIN]" : ""),
-        user_telegram_id: currentUser.telegram_id,
+        user_telegram_id: String(currentUser.telegram_id),
         text: commentText,
         vote_type: voteType,
         status: 'pending'
       }]);
 
       if (error) {
-        showAlert("Ошибка отправки!");
+        showAlert("Ошибка отправки: " + error.message);
         return;
       }
 
       const nowISO = new Date().toISOString();
-      await supabaseClient.from('users').update({ last_vote_time: nowISO }).eq('telegram_id', currentUserId);
+      await supabaseClient.from('users').update({ last_vote_time: nowISO }).eq('telegram_id', String(currentUserId));
       currentUser.last_vote_time = nowISO;
 
       if (input) input.value = "";
@@ -658,9 +655,13 @@
       const newElo = document.getElementById('admin-new-elo').value;
       if (!id || !newElo) return showAlert("Заполните Elo!");
 
-      await supabaseClient.from('staff').update({ elo: parseInt(newElo) }).eq('id', parseInt(id));
-      showAlert("Elo обновлено!");
-      loadStaff();
+      const { error } = await supabaseClient.from('staff').update({ elo: parseInt(newElo) }).eq('id', parseInt(id));
+      if (error) {
+        showAlert("Ошибка при сохранении Elo: " + error.message);
+      } else {
+        showAlert("Elo обновлено!");
+        loadStaff();
+      }
     }
 
     async function loadPendingComments() {
@@ -706,25 +707,32 @@
     }
 
     async function loadUsersList() {
-      const { data: users } = await supabaseClient.from('users').select('*');
+      const { data: users, error } = await supabaseClient.from('users').select('*');
       const container = document.getElementById('users-list');
-      container.innerHTML = users ? '' : 'Пусто';
+      
+      if (error) {
+        container.innerHTML = `<p style="color:red">Ошибка загрузки пользователей: ${error.message}</p>`;
+        return;
+      }
+
+      container.innerHTML = users && users.length ? '' : 'Пусто';
 
       if (users) {
         users.forEach(u => {
+          const uId = String(u.telegram_id);
           const statusText = u.custom_status ? `🏷️ ${u.custom_status}` : (u.warnings >= 4 ? '😈 Непослушный' : '');
           
           container.innerHTML += `
             <div style="border-bottom: 1px solid #ccc; padding: 8px 0; font-size: 12px;">
-              <b>${u.nickname}</b> (${u.username || 'без_тега'}) | ID: ${u.telegram_id}<br>
+              <b>${u.nickname}</b> (${u.username || 'без_тега'}) | ID: ${uId}<br>
               Предупреждений: ${u.warnings || 0} ${statusText ? `| Status: <b>${statusText}</b>` : ''} 
               ${u.warning_reason ? `<br><i>Причина: ${u.warning_reason}</i>` : ''}
               <div style="margin-top:5px; display:flex; gap:3px; flex-wrap:wrap;">
-                <button onclick="changeUserNick('${u.telegram_id}')" style="font-size:10px;">✏️ Ник</button>
-                <button onclick="setUserStatus('${u.telegram_id}')" style="font-size:10px; background:#17a2b8; color:white;">🏷️ Выдать статус</button>
-                <button onclick="addWarningWithReason('${u.telegram_id}', ${u.warnings || 0})" style="font-size:10px; background:orange; color:white;">⚠️ Выдать предупреждение</button>
-                <button onclick="resetWarnings('${u.telegram_id}')" style="font-size:10px; background:green; color:white;">🔄 Сбросить всё</button>
-                <button onclick="giveCustomBan('${u.telegram_id}')" style="font-size:10px; background:red; color:white;">⏳ КД</button>
+                <button onclick="changeUserNick('${uId}')" style="font-size:10px;">✏️ Ник</button>
+                <button onclick="setUserStatus('${uId}')" style="font-size:10px; background:#17a2b8; color:white;">🏷️ Выдать статус</button>
+                <button onclick="addWarningWithReason('${uId}', ${u.warnings || 0})" style="font-size:10px; background:orange; color:white;">⚠️ Выдать предупреждение</button>
+                <button onclick="resetWarnings('${uId}')" style="font-size:10px; background:green; color:white;">🔄 Сбросить всё</button>
+                <button onclick="giveCustomBan('${uId}')" style="font-size:10px; background:red; color:white;">⏳ КД</button>
               </div>
             </div>
           `;
@@ -735,25 +743,36 @@
     function changeUserNick(userId) {
       showPrompt("Введите новый никнейм:", "", async (newNick) => {
         if (!newNick) return;
-        await supabaseClient.from('users').update({ nickname: newNick.trim() }).eq('telegram_id', userId);
-        showAlert("Ник обновлен!");
-        loadUsersList();
-        if (userId === currentUserId) await initUser();
+        const targetId = String(userId);
+        const { error } = await supabaseClient.from('users').update({ nickname: newNick.trim() }).eq('telegram_id', targetId);
+        
+        if (error) {
+          showAlert("Ошибка смены ника: " + error.message);
+        } else {
+          showAlert("Ник обновлен!");
+          await loadUsersList();
+          if (targetId === String(currentUserId)) await initUser();
+        }
       });
     }
 
     function setUserStatus(userId) {
       showPrompt("Введите новый статус (или оставьте пустым для удаления):", "Новичок", async (status) => {
         if (status === null) return;
+        const targetId = String(userId);
         const formattedStatus = status.trim() ? status.trim() : null;
         
-        await supabaseClient.from('users').update({ 
+        const { error } = await supabaseClient.from('users').update({ 
           custom_status: formattedStatus 
-        }).eq('telegram_id', userId);
+        }).eq('telegram_id', targetId);
 
-        showAlert("Статус сохранен!");
-        loadUsersList();
-        if (userId === currentUserId) await initUser();
+        if (error) {
+          showAlert("Ошибка сохранения статуса: " + error.message);
+        } else {
+          showAlert("Статус сохранен!");
+          await loadUsersList();
+          if (targetId === String(currentUserId)) await initUser();
+        }
       });
     }
 
@@ -764,28 +783,39 @@
           return;
         }
 
-        const newWarns = currentWarns + 1;
-        await supabaseClient.from('users').update({ 
+        const targetId = String(userId);
+        const newWarns = parseInt(currentWarns || 0) + 1;
+        
+        const { error } = await supabaseClient.from('users').update({ 
           warnings: newWarns,
           warning_reason: reason.trim()
-        }).eq('telegram_id', userId);
+        }).eq('telegram_id', targetId);
 
-        showAlert("Предупреждение выдано!");
-        loadUsersList();
-        if (userId === currentUserId) await initUser();
+        if (error) {
+          showAlert("Ошибка выдачи предупреждения: " + error.message);
+        } else {
+          showAlert("Предупреждение выдано!");
+          await loadUsersList();
+          if (targetId === String(currentUserId)) await initUser();
+        }
       });
     }
 
     async function resetWarnings(userId) {
-      await supabaseClient.from('users').update({ 
+      const targetId = String(userId);
+      const { error } = await supabaseClient.from('users').update({ 
         warnings: 0,
         warning_reason: null,
         custom_status: null
-      }).eq('telegram_id', userId);
+      }).eq('telegram_id', targetId);
 
-      showAlert("Все предупреждения и статусы полностью сброшены!");
-      loadUsersList();
-      if (userId === currentUserId) await initUser();
+      if (error) {
+        showAlert("Ошибка сброса: " + error.message);
+      } else {
+        showAlert("Все предупреждения и статусы полностью сброшены!");
+        await loadUsersList();
+        if (targetId === String(currentUserId)) await initUser();
+      }
     }
 
     function giveCustomBan(userId) {
@@ -793,13 +823,18 @@
         if (hours === null) return;
         showPrompt("На сколько МИНУТ выдать бан/КД?", "0", async (mins) => {
           if (mins === null) return;
+          const targetId = String(userId);
           const totalMs = (parseInt(hours || 0) * 3600 + parseInt(mins || 0) * 60) * 1000;
           const banUntil = new Date(new Date().getTime() + totalMs).toISOString();
 
-          await supabaseClient.from('users').update({ ban_until: banUntil }).eq('telegram_id', userId);
-          showAlert(`КД выдан на ${hours} ч ${mins} мин!`);
-          loadUsersList();
-          if (userId === currentUserId) await initUser();
+          const { error } = await supabaseClient.from('users').update({ ban_until: banUntil }).eq('telegram_id', targetId);
+          if (error) {
+            showAlert("Ошибка выдачи КД: " + error.message);
+          } else {
+            showAlert(`КД выдан на ${hours} ч ${mins} мин!`);
+            await loadUsersList();
+            if (targetId === String(currentUserId)) await initUser();
+          }
         });
       });
     }
