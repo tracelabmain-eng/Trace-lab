@@ -3,15 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Рейтинг Воспитателей v2</title>
+  <title>Рейтинг Воспитателей v2.1</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 15px; margin: 0; padding-bottom: 80px; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background-color: #f4f4f9; 
+      padding: 15px; 
+      margin: 0; 
+      padding-bottom: 80px; 
+      -webkit-user-select: text;
+      user-select: text; /* Фикс для разблокировки выделения на ПК */
+    }
     .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .card h3 { margin: 0 0 5px 0; color: #333; }
     .elo { font-size: 18px; font-weight: bold; color: #007bff; margin-bottom: 10px; }
-    input[type="text"], input[type="number"] { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    
+    /* Добавлены правила cursor: pointer и user-select: auto для нормального клика на ПК */
+    input[type="text"], input[type="number"], select { 
+      width: 100%; 
+      padding: 10px; 
+      margin-bottom: 10px; 
+      border: 1px solid #ccc; 
+      border-radius: 5px; 
+      box-sizing: border-box; 
+      font-size: 14px;
+      cursor: text !important;
+      -webkit-user-select: text !important;
+      user-select: text !important;
+    }
+    select { cursor: pointer !important; }
+
     button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
     .btn-plus { background: #28a745; color: white; margin-right: 5px; }
     .btn-minus { background: #dc3545; color: white; }
@@ -24,7 +47,7 @@
     .user-info { font-size: 13px; color: #555; background: #e9ecef; padding: 8px; border-radius: 5px; margin-bottom: 15px; }
     .badge { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
 
-    /* Плашка версии слева внизу */
+    /* Плашка версии */
     .version-tag {
       position: fixed;
       bottom: 8px;
@@ -84,7 +107,13 @@
     const tg = window.Telegram?.WebApp;
     tg?.expand();
 
-    // Чтение юзера строго из Telegram SDK
+    // Принудительный фикс фокуса для Telegram Desktop
+    document.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+        e.target.focus();
+      }
+    });
+
     const tgUser = tg?.initDataUnsafe?.user;
     const currentUserId = tgUser ? String(tgUser.id) : "pc_dev_user_1";
     const currentUsername = tgUser?.username ? "@" + tgUser.username : "без_юзернейма";
@@ -128,7 +157,6 @@
       `;
     }
 
-    // Загрузка воспитателей С СОРТИРОВКОЙ ПО УБЫВАНИЮ ELO (order('elo', { ascending: false }))
     async function loadStaff() {
       const { data: staff, error } = await supabaseClient
         .from('staff')
@@ -156,10 +184,10 @@
             <div class="card">
               <h3>#${index + 1} ${s.name}</h3>
               <div class="elo">Elo: ${s.elo}</div>
-              <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off">
+              <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off" onclick="this.focus()">
               <div>
                 <button class="btn-plus" onclick="sendVote(${s.id}, 'plus')">+10 Elo</button>
-                <button class="btn-minus" onclick="sendVote(${s.id}, 'minus')">-10 Elo</button>
+                <button class="btn-minus" onclick="sendVote(${s.id}, 'minus')">-15 Elo</button>
               </div>
             </div>
           `;
@@ -170,7 +198,6 @@
     async function sendVote(staffId, voteType) {
       if (!currentUser) await initUser();
 
-      // Проверка банов из админки
       if (!isAdmin && currentUser.ban_until) {
         const banEnd = new Date(currentUser.ban_until).getTime();
         if (banEnd > new Date().getTime()) {
@@ -186,10 +213,10 @@
 
       if (!commentText || commentText.length < 10) {
         alert("Напишите отзыв минимум из 10 символов!");
+        setTimeout(() => { if (input) input.focus(); }, 100);
         return;
       }
 
-      // АВТОМАТИЧЕСКИЙ КД 5 МИНУТ (300 СЕКУНД)
       if (!isAdmin && currentUser.last_vote_time) {
         const lastVote = new Date(currentUser.last_vote_time).getTime();
         const diffSeconds = Math.floor((new Date().getTime() - lastVote) / 1000);
@@ -222,7 +249,6 @@
       alert(isAdmin ? "Отзыв отправлен без КД (Режим админа)!" : "Отзыв отправлен на модерацию!");
     }
 
-    /* Логика Админки */
     function openAdminPanel() {
       if (!isAdmin) {
         const pass = prompt("Пароль админа:");
@@ -274,7 +300,7 @@
       if (comments) {
         comments.forEach(c => {
           const teacherName = staffMap[c.teacher_id] || `ID ${c.teacher_id}`;
-          const typeLabel = c.vote_type === 'plus' ? '🟢 +10 Elo' : '🔴 -10 Elo';
+          const typeLabel = c.vote_type === 'plus' ? '🟢 +10 Elo' : '🔴 -15 Elo';
           
           container.innerHTML += `
             <div style="border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; border-radius: 5px; background: #fafafa;">
@@ -291,7 +317,6 @@
       }
     }
 
-    // Принятие отзыва начислят/забирает +10 / -10 Elo
     async function approveComment(commentId, staffId, voteType) {
       const delta = voteType === 'plus' ? 10 : -10;
       await supabaseClient.from('comments').update({ status: 'approved' }).eq('id', commentId);
