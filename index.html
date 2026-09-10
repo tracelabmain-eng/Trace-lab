@@ -3,249 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Рейтинг Воспитателей — Trace Lab</title>
+  <title>TraceLab MiniApp</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <style>
+    /* Базовые CSS-переменные (По умолчанию - Темная тема) */
     :root {
-      --bg-color: #f4f5f9;
-      --card-bg: #ffffff;
-      --primary: #007aff;
-      --primary-hover: #0062cc;
-      --success: #34c759;
-      --danger: #ff3b30;
-      --warning: #ff9500;
-      --info: #5856d6;
-      --text-main: #1c1c1e;
-      --text-muted: #8e8e93;
-      --border-color: #e5e5ea;
-      --radius-lg: 16px;
-      --radius-md: 12px;
+      --bg-color: #121214;
+      --card-bg: #1c1c1e;
+      --text-main: #ffffff;
+      --text-muted: #a1a1aa;
+      --border-color: #27272a;
+      --input-bg: #27272a;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
       --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --admin-bg: #18181b;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    body { 
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background-color: var(--bg-color); 
+    /* Светлая тема */
+    [data-theme="light"] {
+      --bg-color: #f4f4f5;
+      --card-bg: #ffffff;
+      --text-main: #18181b;
+      --text-muted: #71717a;
+      --border-color: #e4e4e7;
+      --input-bg: #f4f4f5;
+      --admin-bg: #f4f4f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
       color: var(--text-main);
-      padding: 16px; 
-      margin: 0; 
-      padding-bottom: 90px; 
-      -webkit-user-select: text;
-      user-select: text;
-    }
-
-    /* Top Bar */
-    .top-bar { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 16px; 
-    }
-    .menu-btn { 
-      background: var(--card-bg); 
-      color: var(--text-main); 
-      border: 1px solid var(--border-color); 
-      padding: 10px 16px; 
-      border-radius: var(--radius-md); 
-      cursor: pointer; 
-      font-weight: 600; 
-      font-size: 14px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      transition: all 0.2s ease;
+      min-height: 100vh;
+      padding-bottom: 20px;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
-    .menu-btn:active { transform: scale(0.97); }
 
-    /* Profile Header Box */
-    .profile-card {
-      background: var(--card-bg);
-      border-radius: var(--radius-lg);
+    .app-container {
+      width: 100%;
+      max-width: 480px;
       padding: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-      border: 1px solid var(--border-color);
     }
-    .profile-header {
+
+    .header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 20px;
     }
-    .profile-name {
-      font-size: 16px;
-      font-weight: 700;
+
+    .menu-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
       color: var(--text-main);
-    }
-    .profile-tag {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-    .badges-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 18px;
     }
 
-    /* Sidebar */
-    .sidebar-overlay { 
-      display: none; 
-      position: fixed; 
-      top:0; left:0; width:100%; height:100%; 
-      background: rgba(0,0,0,0.4); 
-      backdrop-filter: blur(4px);
-      z-index: 2000; 
-    }
-    .sidebar { 
-      position: fixed; 
-      top:0; 
-      left:-290px; 
-      width:290px; 
-      height:100%; 
-      background: var(--card-bg); 
-      z-index: 2001; 
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-      padding: 24px 20px; 
-      box-shadow: 10px 0 30px rgba(0,0,0,0.1); 
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .sidebar.active { left: 0; }
-    .sidebar-header { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 24px; 
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-color); 
-    }
-    .sidebar-header h3 { margin: 0; font-size: 18px; font-weight: 700; }
-    .sidebar-menu-item { 
-      padding: 14px 14px; 
-      margin-bottom: 8px; 
-      border-radius: var(--radius-md); 
-      cursor: pointer; 
-      font-weight: 600; 
-      font-size: 15px;
-      color: var(--text-main); 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      transition: all 0.2s;
-    }
-    .sidebar-menu-item:hover, .sidebar-menu-item.active { 
-      background: var(--primary); 
-      color: white; 
-    }
-
-    .sidebar-footer {
-      border-top: 1px solid var(--border-color);
-      padding-top: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .support-box {
-      background: #f8f9fa;
+    .user-profile {
+      background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 12px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+
+    .profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .profile-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .profile-tag {
       font-size: 12px;
-      color: #666;
+      color: var(--text-muted);
     }
-    .support-box b { color: var(--text-main); display: block; margin-bottom: 4px; font-size: 13px; }
 
-    .support-btn {
-      width: 100%;
-      background: #10b981;
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
+    .badges-container {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
       margin-top: 8px;
-      transition: background 0.2s;
     }
-    .support-btn:active { opacity: 0.9; }
 
-    .version-tag {
-      display: inline-block;
-      align-self: flex-start;
-      background: #eee;
-      color: #777;
+    .badge {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
       font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 20px;
-      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
     }
 
-    /* Cards for Staff & Features */
-    .page-title {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0 0 16px 0;
-      color: var(--text-main);
+    .badge-custom {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
     }
 
-    .card { 
-      background: var(--card-bg); 
-      padding: 18px; 
-      border-radius: var(--radius-lg); 
-      margin-bottom: 14px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+    .badge-naughty {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+    }
+
+    .page-section {
+      display: none;
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card-bg);
       border: 1px solid var(--border-color);
-      position: relative;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
     }
 
     .staff-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
-    .staff-name { margin: 0; font-size: 17px; font-weight: 700; }
-    .staff-rank { font-size: 20px; font-weight: 800; }
+
+    .staff-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .staff-rank {
+      font-size: 14px;
+      font-weight: 700;
+    }
 
     .elo-container {
-      display: inline-flex;
-      align-items: center;
-      background: rgba(0, 122, 255, 0.08);
-      color: var(--primary);
-      font-weight: 700;
-      font-size: 15px;
-      padding: 6px 12px;
-      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
       margin-bottom: 12px;
     }
 
-    input[type="text"], input[type="number"], select { 
-      width: 100%; 
-      padding: 12px 14px; 
-      margin-bottom: 12px; 
-      border: 1px solid var(--border-color); 
-      border-radius: var(--radius-md); 
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
       font-size: 14px;
-      background: #fafafa;
+      margin-bottom: 8px;
       outline: none;
-      transition: border 0.2s;
     }
-    input[type="text"]:focus, input[type="number"]:focus, select:focus {
-      border-color: var(--primary);
-      background: #fff;
+
+    button {
+      border: none;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s ease;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .vote-btns {
@@ -253,448 +208,287 @@
       gap: 8px;
     }
 
-    button { 
-      padding: 10px 16px; 
-      border: none; 
-      border-radius: var(--radius-md); 
-      cursor: pointer; 
-      font-weight: 600; 
-      font-size: 13px;
-      transition: all 0.2s;
+    .btn-plus {
+      background: var(--success);
+      color: white;
+      flex: 1;
     }
-    .btn-plus { background: #e6f4ea; color: var(--success); flex: 1; border: 1px solid rgba(52, 199, 89, 0.2); }
-    .btn-plus:active { background: var(--success); color: white; }
 
-    .btn-minus { background: #fce8e6; color: var(--danger); flex: 1; border: 1px solid rgba(255, 59, 48, 0.2); }
-    .btn-minus:active { background: var(--danger); color: white; }
-
-    /* Admin Widget */
-    .admin-widget { 
-      display: none; 
-      position: fixed; 
-      bottom: 10px; right: 10px; left: 10px; 
-      max-height: 82vh; 
-      background: var(--card-bg); 
-      z-index: 3000; 
-      padding: 18px; 
-      border: 1px solid var(--border-color); 
-      overflow-y: auto; 
-      border-radius: var(--radius-lg); 
-      box-shadow: 0 10px 40px rgba(0,0,0,0.25); 
+    .btn-minus {
+      background: var(--danger);
+      color: white;
+      flex: 1;
     }
-    .admin-widget.minimized { 
-      height: 50px; 
-      overflow: hidden; 
-      padding: 10px 16px; 
-      background: #1c1c1e; 
-      color: white; 
-    }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 
-    /* Badges */
-    .badge { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-    .badge-custom { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-    .badge-naughty { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-
-    /* Modal Overlay & Warning */
-    .custom-modal-overlay { 
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 5000; 
-      justify-content: center; align-items: center; 
+    /* Сайдбар */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 100;
     }
-    .custom-modal { 
-      background: white; padding: 22px; border-radius: var(--radius-lg); 
-      max-width: 330px; width: 90%; text-align: center; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      background: var(--card-bg);
+      border-right: 1px solid var(--border-color);
+      z-index: 101;
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar-menu-item {
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      cursor: pointer;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .sidebar-menu-item:hover, .sidebar-menu-item.active {
+      background: var(--input-bg);
+    }
+
+    .theme-selector-container {
+      margin-top: 15px;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      border-radius: var(--radius-sm);
+    }
+
+    .theme-selector-container label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    /* Модалки и Банеры */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    .custom-modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      width: 100%;
+      max-width: 360px;
     }
 
     .toast-message {
       position: fixed;
-      bottom: 24px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(10px);
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 30px;
-      font-size: 13px;
-      font-weight: 600;
-      z-index: 6000;
-      pointer-events: none;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      animation: fadeInOut 1.5s forwards;
+      background: #27272a;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 300;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translate(-50%, 15px); }
-      20% { opacity: 1; transform: translate(-50%, 0); }
-      80% { opacity: 1; transform: translate(-50%, 0); }
-      100% { opacity: 0; transform: translate(-50%, -10px); }
-    }
-
-    .warning-banner-overlay { 
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); z-index: 4000; 
-      justify-content: center; align-items: center; padding: 20px; 
-    }
-    .warning-banner { 
-      background: #fff; border-top: 6px solid var(--warning); padding: 24px; 
-      border-radius: var(--radius-lg); width: 100%; max-width: 360px; text-align: center; 
-      box-shadow: 0 15px 35px rgba(0,0,0,0.25); 
-    }
-    .warning-banner.banned { border-top-color: var(--danger); }
-    .warning-title { color: var(--text-main); font-size: 18px; font-weight: 800; margin-bottom: 8px; }
-    .warning-reason-box { background: #f8f9fa; border: 1px dashed var(--border-color); padding: 12px; border-radius: var(--radius-md); margin: 14px 0; color: #333; font-size: 13px; text-align: left; }
-
-    .page-section { display: none; }
-    .page-section.active { display: block; }
-
-    /* --- СТИЛИ МОДАЛКИ ПРАВИЛ --- */
-    .rules-overlay {
+    /* Админка */
+    .admin-widget {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0, 0, 0, 0.92);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 16px;
-    }
-    .rules-card {
-      background-color: #1c1c1e;
-      color: #ffffff;
-      border-radius: 24px;
-      max-width: 380px;
-      width: 100%;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-      border: 1px solid #2c2c2e;
-    }
-    .rules-header { text-align: center; margin-bottom: 16px; }
-    .rules-icon { font-size: 48px; display: block; margin-bottom: 10px; }
-    .rules-title { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
-    .rules-step { font-size: 12px; color: #8e8e93; font-weight: 500; }
-    .rules-body {
-      min-height: 110px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 0 8px;
-    }
-    .rules-text { font-size: 15px; line-height: 1.4; color: #e5e5ea; }
-    .rules-dots {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 4px;
-      margin: 16px 0;
-    }
-    .dot {
-      height: 6px; width: 6px;
-      background-color: #3a3a3c;
-      border-radius: 3px;
-      transition: all 0.3s ease;
-    }
-    .dot.active { background-color: #007aff; width: 16px; }
-    .rules-btn {
-      width: 100%;
+      bottom: 10px;
+      right: 10px;
+      left: 10px;
+      max-width: 460px;
+      margin: 0 auto;
+      background: var(--admin-bg);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius-md);
       padding: 14px;
-      border: none;
-      border-radius: 14px;
-      background-color: #007aff;
-      color: #ffffff;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
+      z-index: 90;
+      max-height: 80vh;
+      overflow-y: auto;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     }
-    .rules-btn:disabled {
-      background-color: #3a3a3c;
-      color: #8e8e93;
-      cursor: not-allowed;
+
+    .admin-widget.minimized {
+      max-height: 50px;
+      overflow: hidden;
     }
   </style>
 </head>
 <body>
 
-  <!-- МОДАЛЬНОЕ ОКНО ПРАВИЛ TRACE LAB -->
-  <div id="rulesModal" class="rules-overlay" style="display: none;">
-    <div class="rules-card">
-      <div class="rules-header">
-        <span id="rulesIcon" class="rules-icon">🤖</span>
-        <h2 id="rulesTitle" class="rules-title">1. Скрипты и автокликеры</h2>
-        <div id="rulesStep" class="rules-step">Правило 1 из 8</div>
-      </div>
-
-      <div class="rules-body">
-        <p id="rulesText" class="rules-text">Загрузка правил...</p>
-      </div>
-
-      <div id="rulesDots" class="rules-dots"></div>
-
-      <button id="rulesBtn" class="rules-btn" disabled>Ждите (6 сек...)</button>
-    </div>
-  </div>
-
-  <div class="top-bar">
-    <button class="menu-btn" onclick="openSidebar()">
-      <span>☰</span> Меню
-    </button>
-  </div>
-
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
   <div class="sidebar" id="sidebar">
-    <div>
-      <div class="sidebar-header">
-        <h3>Навигация</h3>
-        <button onclick="closeSidebar()" style="background:none; border:none; font-size:22px; cursor:pointer; color:#8e8e93;">✕</button>
-      </div>
-      <div class="sidebar-menu-item active" onclick="switchTab('ratings')">🏆 Рейтинг</div>
-      <div class="sidebar-menu-item" onclick="switchTab('kompromat')">📁 Компромат 🔒</div>
-      <div class="sidebar-menu-item" onclick="switchTab('shifts')">📅 Смены</div>
-    </div>
-
-    <div class="sidebar-footer">
-      <div class="support-box">
-        <b>🐛 Нашли баг или идею?</b>
-        <span>Обратитесь в поддержку для предложения изменений.</span>
-        <button class="support-btn" onclick="contactSupport()">💬 Написать в поддержку</button>
-      </div>
-      
-      <div>
-        <span class="version-tag" onclick="handleVersionClick()">beta 0.1</span>
-      </div>
-    </div>
-  </div>
-
-  <div id="section-ratings" class="page-section active">
-    <h2 class="page-title">🏆 Рейтинг Воспитателей</h2>
+    <h3 style="margin-bottom: 20px;">TraceLab</h3>
+    <div class="sidebar-menu-item active" onclick="switchTab('ratings')">📊 Рейтинг Staff</div>
+    <div class="sidebar-menu-item" onclick="switchTab('kompromat')">📁 Компромат</div>
+    <div class="sidebar-menu-item" onclick="switchTab('shifts')">🕒 Смены</div>
     
-    <div class="profile-card" id="user-display">
-      <div style="color: var(--text-muted); font-size: 13px;">Загрузка профиля...</div>
+    <div class="theme-selector-container">
+      <label for="theme-select">🎨 Тема оформления:</label>
+      <select id="theme-select" onchange="changeTheme(this.value)" style="margin-bottom:0;">
+        <option value="dark">Тёмная</option>
+        <option value="light">Светлая</option>
+      </select>
     </div>
 
-    <div id="staff-list">Загрузка данных...</div>
-  </div>
-
-  <div id="section-kompromat" class="page-section">
-    <h2 class="page-title">📁 Компромат</h2>
-    <div class="card" style="text-align: center; padding: 40px 20px;">
-      <div style="font-size: 36px; margin-bottom: 10px;">🔒</div>
-      <h3 style="margin: 0 0 8px 0;">Раздел недоступен</h3>
-      <p style="color: var(--text-muted); font-size: 14px; margin: 0;">Ведутся технические работы. Раздел появится в скором времени.</p>
+    <div style="margin-top: auto; font-size: 11px; color: var(--text-muted); cursor: pointer;" onclick="handleVersionClick()">
+      Версия beta 0.1
     </div>
   </div>
 
-  <div id="section-shifts" class="page-section">
-    <h2 class="page-title">📅 Смены воспитателей</h2>
-    <div class="card" style="text-align: center; padding: 40px 20px;">
-      <div style="font-size: 36px; margin-bottom: 10px;">🛠</div>
-      <h3 style="margin: 0 0 8px 0;">Обновление графика</h3>
-      <p style="color: var(--text-muted); font-size: 14px; margin: 0;">Расписание редактируется администрацией.</p>
+  <div class="app-container">
+    <div class="header">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <h2>TraceLab MiniApp</h2>
+      <div></div>
     </div>
-  </div>
 
-  <div id="admin-widget" class="admin-widget">
-    <div class="admin-header">
-      <h3 style="margin:0;" id="admin-title">👑 Админ-Панель</h3>
-      <div style="display:flex; gap:6px;">
-        <button onclick="toggleMinimizeAdmin()" style="background:#8e8e93; color:white; padding:6px 10px;" id="min-btn">➖ Свернуть</button>
-        <button onclick="closeAdminPanel()" style="background:var(--danger); color:white; padding:6px 10px;">❌</button>
+    <div id="user-display" class="user-profile">
+      <div style="color:var(--text-muted)">Загрузка профиля...</div>
+    </div>
+
+    <!-- Вкладка Рейтинги -->
+    <div id="section-ratings" class="page-section active">
+      <div id="staff-list"></div>
+    </div>
+
+    <!-- Вкладка Компромат -->
+    <div id="section-kompromat" class="page-section">
+      <div class="card">
+        <h3>Раздел Компромат</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Здесь публикуются открытые материалы и жалобы.</p>
       </div>
     </div>
 
-    <div id="admin-content">
-      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
-      <h4 style="margin: 0 0 8px 0;">Изменить Elo вручную</h4>
-      <select id="admin-staff-select"></select>
-      <input type="number" id="admin-new-elo" placeholder="Новое значение Elo">
-      <button onclick="setStaffElo()" style="background:var(--primary); color:white; width:100%; margin-bottom:12px;">Сохранить Elo</button>
-
-      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
-      <h4 style="margin: 0 0 8px 0;">Отзывы на модерации</h4>
-      <div id="pending-comments">Загрузка...</div>
-
-      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
-      <h4 style="margin: 0 0 8px 0;">Управление пользователями</h4>
-      <div id="users-list">Загрузка...</div>
+    <!-- Вкладка Смены -->
+    <div id="section-shifts" class="page-section">
+      <div class="card">
+        <h3>График Смен</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">Расписание активных смен персонала.</p>
+      </div>
     </div>
   </div>
 
+  <!-- Оверлей Варнов / Бан-панели -->
+  <div class="custom-modal-overlay" id="warning-banner-overlay">
+    <div class="custom-modal" id="warning-banner-card">
+      <h3 id="warning-banner-title" style="color:var(--warning);">Предупреждение</h3>
+      <p id="warning-count-text" style="font-size:14px; margin: 8px 0;"></p>
+      <p id="warning-banner-reason" style="font-size:12px; color:var(--danger); margin-bottom: 8px;"></p>
+      <p id="warning-subtext" style="font-size:12px; color:var(--text-muted); margin-bottom: 16px;"></p>
+      <div id="warning-action-buttons" style="display:flex; gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для сообщений и ввода -->
   <div class="custom-modal-overlay" id="custom-modal-overlay">
     <div class="custom-modal">
-      <h4 id="modal-title" style="margin: 0 0 8px 0; font-size: 16px;">Уведомление</h4>
-      <p id="modal-text" style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;"></p>
+      <h3 id="modal-title" style="margin-bottom:8px;"></h3>
+      <p id="modal-text" style="font-size:13px; color:var(--text-muted); margin-bottom:12px;"></p>
       <div id="modal-input-container"></div>
-      <div style="display: flex; gap: 8px; margin-top: 16px;" id="modal-btns">
-        <button onclick="closeModal()" style="background:var(--primary); color:white; width:100%;">ОК</button>
-      </div>
+      <div id="modal-btns" style="display:flex; gap:8px; margin-top:12px;"></div>
     </div>
   </div>
 
-  <div class="warning-banner-overlay" id="warning-banner-overlay">
-    <div class="warning-banner" id="warning-banner-card">
-      <div class="warning-title" id="warning-banner-title">⚠️ ВНИМАНИЕ!</div>
-      <p style="font-size: 13px; color: var(--text-muted); margin: 4px 0;" id="warning-count-text"></p>
-      
-      <div class="warning-reason-box">
-        <b style="font-size: 12px; color: var(--text-muted);">Причина:</b>
-        <div id="warning-banner-reason" style="margin-top: 4px; font-weight: 600; font-size: 14px;"></div>
+  <!-- Админ Виджет -->
+  <div class="admin-widget" id="admin-widget">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h4>⚙️ Админ-Панель</h4>
+      <div>
+        <button id="min-btn" onclick="toggleMinimizeAdmin()" style="font-size:11px; padding:4px 8px;">➖ Свернуть</button>
+        <button onclick="closeAdminPanel()" style="font-size:11px; padding:4px 8px; background:var(--danger); color:white;">❌ Закрыть</button>
       </div>
-
-      <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0;" id="warning-subtext"></p>
-
-      <div style="display:flex; flex-direction:column; gap:8px; margin-top: 16px;" id="warning-action-buttons"></div>
+    </div>
+    
+    <div id="admin-content">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:var(--text-muted);">Ручное управление Elo:</label>
+        <select id="admin-staff-select"></select>
+        <input type="number" id="admin-new-elo" placeholder="Новое значение Elo">
+        <button onclick="setStaffElo()" style="width:100%; background:var(--primary); color:white;">Обновить Elo</button>
+      </div>
+      
+      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
+      
+      <h5>Отзывы на модерации:</h5>
+      <div id="pending-comments" style="margin-top:8px;"></div>
+      
+      <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
+      
+      <h5>Список пользователей:</h5>
+      <div id="users-list" style="margin-top:8px;"></div>
     </div>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://onkujrlrrtraxiassmqh.supabase.co'; 
-    const SUPABASE_KEY = 'sb_publishable_KbJ4S1m1yt1zM6jtyM8UQw_FOJmqGe4';
+    const SUPABASE_URL = "https://xyzcompany.supabase.co"; // Укажите свой URL
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // Укажите свой Ключ
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const tg = window.Telegram?.WebApp;
-    tg?.expand();
+    if (tg) tg.expand();
 
-    const tgUser = tg?.initDataUnsafe?.user;
-    const currentUserId = String(tgUser ? tgUser.id : "pc_dev_user_1");
-    const currentUsername = tgUser?.username ? "@" + tgUser.username : "без_юзернейма";
-
-    let autoNickname = "Пользователь";
-    if (tgUser) {
-      if (tgUser.first_name) autoNickname = tgUser.first_name + (tgUser.last_name ? " " + tgUser.last_name : "");
-      else if (tgUser.username) autoNickname = "@" + tgUser.username;
-    }
+    const currentUserId = tg?.initDataUnsafe?.user?.id || 123456789;
+    const autoNickname = tg?.initDataUnsafe?.user?.first_name || "User";
+    const currentUsername = tg?.initDataUnsafe?.user?.username ? `@${tg.initDataUnsafe.user.username}` : null;
 
     let currentUser = null;
     let isAdmin = false;
     let staffMap = {};
-    let modalCallback = null;
-
     let versionClickCount = 0;
     let versionClickTimer = null;
+    let modalCallback = null;
 
-    // --- ЛОГИКА 8 СЛАЙДОВ ПРАВИЛ ---
-    const rulesSlides = [
-      {
-        icon: '🤖',
-        title: '1. Скрипты и автокликеры',
-        text: 'Запрещено использовать любой сторонний софт, ботов, автокликеры и симуляторы нажатий. Вся автоматизация отслеживается.'
-      },
-      {
-        icon: '👥',
-        title: '2. Мультиаккаунты',
-        text: '1 человек = 1 Telegram-аккаунт. Создавать фермы аккаунтов и твинки строго запрещено.'
-      },
-      {
-        icon: '⭐️',
-        title: '3. Накрутка и слив баллов',
-        text: 'Запрещено ставить оценки нечестным путём, специально накручивать или занижать баллы воспитателям.'
-      },
-      {
-        icon: '🐛',
-        title: '4. Использование багов',
-        text: 'Нашли уязвимость или ошибку? Сообщите администрации. За багоюз и использование ошибок в личных целях — блокировка.'
-      },
-      {
-        icon: '🤬',
-        title: '5. Мат и оскорбления',
-        text: 'Запрещено материться, обзываться, провоцировать конфликты и ругаться с администрацией.'
-      },
-      {
-        icon: '📢',
-        title: '6. Спам',
-        text: 'Запрещено присылать спам, рекламу, рассылки и дублировать одинаковые сообщения.'
-      },
-      {
-        icon: '🚫',
-        title: '7. «Дичь»',
-        text: 'Запрещено писать сообщения и присылать контент, который не относится к теме нашей программы или фирмы.'
-      },
-      {
-        icon: '🛑',
-        title: '8. Непослушание',
-        text: 'Запрещено мешать работе сервиса, создавать помехи бета-тесту и игнорировать прямые требования администрации.'
-      }
-    ];
-
-    let currentRuleStep = 0;
-    let ruleTimer = null;
-    let ruleTimeLeft = 6;
-    const RULE_COOLDOWN = 6; // 6 секунд КД
-
-    function checkAndShowRules() {
-      if (!localStorage.getItem('tracelab_rules_accepted')) {
-        document.getElementById('rulesModal').style.display = 'flex';
-        initRulesDots();
-        renderRuleSlide();
-      }
-    }
-
-    function initRulesDots() {
-      const container = document.getElementById('rulesDots');
-      container.innerHTML = '';
-      rulesSlides.forEach((_, i) => {
-        const dot = document.createElement('div');
-        dot.className = `dot ${i === 0 ? 'active' : ''}`;
-        container.appendChild(dot);
-      });
-    }
-
-    function renderRuleSlide() {
-      clearInterval(ruleTimer);
-      const slide = rulesSlides[currentRuleStep];
-
-      document.getElementById('rulesIcon').textContent = slide.icon;
-      document.getElementById('rulesTitle').textContent = slide.title;
-      document.getElementById('rulesText').textContent = slide.text;
-      document.getElementById('rulesStep').textContent = `Правило ${currentRuleStep + 1} из ${rulesSlides.length}`;
-
-      document.querySelectorAll('#rulesDots .dot').forEach((dot, idx) => {
-        dot.className = `dot ${idx === currentRuleStep ? 'active' : ''}`;
-      });
-
-      const btn = document.getElementById('rulesBtn');
-      ruleTimeLeft = RULE_COOLDOWN;
-      btn.disabled = true;
-      btn.textContent = `Ждите (${ruleTimeLeft} сек...)`;
-
-      ruleTimer = setInterval(() => {
-        ruleTimeLeft--;
-        if (ruleTimeLeft > 0) {
-          btn.textContent = `Ждите (${ruleTimeLeft} сек...)`;
-        } else {
-          clearInterval(ruleTimer);
-          btn.disabled = false;
-          if (currentRuleStep === rulesSlides.length - 1) {
-            btn.textContent = 'Начать использовать';
-          } else {
-            btn.textContent = 'Продолжить';
-          }
-        }
-      }, 1000);
-    }
-
-    document.getElementById('rulesBtn').addEventListener('click', () => {
-      if (currentRuleStep < rulesSlides.length - 1) {
-        currentRuleStep++;
-        renderRuleSlide();
-      } else {
-        localStorage.setItem('tracelab_rules_accepted', 'true');
-        document.getElementById('rulesModal').style.display = 'none';
-      }
+    // Инициализация при загрузке
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initUser();
+      loadStaff();
     });
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      checkAndShowRules();
-      await initUser();
-      await loadStaff();
-    });
+    // Управление темами
+    function initTheme() {
+      const savedTheme = localStorage.getItem('app_theme') || 'dark';
+      applyTheme(savedTheme);
+      document.getElementById('theme-select').value = savedTheme;
+    }
+
+    function changeTheme(themeName) {
+      localStorage.setItem('app_theme', themeName);
+      applyTheme(themeName);
+    }
+
+    function applyTheme(themeName) {
+      document.documentElement.setAttribute('data-theme', themeName);
+    }
 
     function showToast(text) {
       const existingToast = document.querySelector('.toast-message');
@@ -915,8 +709,8 @@
               <div class="elo-container">⭐ ${s.elo} Elo</div>
               <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off">
               <div class="vote-btns">
-                <button class="btn-plus" onclick="sendVote(${s.id}, 'plus')">+10 Elo</button>
-                <button class="btn-minus" onclick="sendVote(${s.id}, 'minus')">-10 Elo</button>
+                <button class="btn-plus" id="btn-plus-${s.id}" onclick="sendVote(${s.id}, 'plus')">+10 Elo</button>
+                <button class="btn-minus" id="btn-minus-${s.id}" onclick="sendVote(${s.id}, 'minus')">-10 Elo</button>
               </div>
             </div>
           `;
@@ -955,6 +749,7 @@
         return;
       }
 
+      // 7-минутный КД активен только если юзер НЕ администратор
       if (!isAdmin && currentUser.last_vote_time) {
         const lastVote = new Date(currentUser.last_vote_time).getTime();
         const diffSeconds = Math.floor((new Date().getTime() - lastVote) / 1000);
@@ -965,26 +760,40 @@
         }
       }
 
+      // Блокировка кнопок от двойного нажатия
+      const btnPlus = document.getElementById(`btn-plus-${staffId}`);
+      const btnMinus = document.getElementById(`btn-minus-${staffId}`);
+      if (btnPlus) btnPlus.disabled = true;
+      if (btnMinus) btnMinus.disabled = true;
+
+      const userNickWithAdminFlag = currentUser.nickname + (isAdmin ? " [ADMIN_SESSION]" : "");
+
       const { error } = await supabaseClient.from('comments').insert([{
         teacher_id: staffId,
-        user_nickname: currentUser.nickname + (isAdmin ? " [ADMIN]" : ""),
+        user_nickname: userNickWithAdminFlag,
         user_telegram_id: String(currentUser.telegram_id),
         text: commentText,
         vote_type: voteType,
         status: 'pending'
       }]);
 
+      if (btnPlus) btnPlus.disabled = false;
+      if (btnMinus) btnMinus.disabled = false;
+
       if (error) {
         showAlert("Ошибка: " + error.message);
         return;
       }
 
-      const nowISO = new Date().toISOString();
-      await supabaseClient.from('users').update({ last_vote_time: nowISO }).eq('telegram_id', String(currentUserId));
-      currentUser.last_vote_time = nowISO;
+      // Если голосует обычный юзер — фиксируем время последнего голосования
+      if (!isAdmin) {
+        const nowISO = new Date().toISOString();
+        await supabaseClient.from('users').update({ last_vote_time: nowISO }).eq('telegram_id', String(currentUserId));
+        currentUser.last_vote_time = nowISO;
+      }
 
       if (input) input.value = "";
-      showAlert(isAdmin ? "Отзыв отправлен (Админ)!" : "Отзыв отправлен на модерацию!");
+      showAlert(isAdmin ? "Отзыв отправлен (Без КД)!" : "Отзыв отправлен на модерацию!");
     }
 
     function promptAdminPassword() {
@@ -1025,7 +834,7 @@
     function closeAdminPanel() {
       isAdmin = false;
       document.getElementById('admin-widget').style.display = 'none';
-      showAlert("Панель закрыта.");
+      showAlert("Панель закрыта. КД снова активен.");
     }
 
     async function setStaffElo() {
@@ -1053,10 +862,10 @@
           const typeLabel = c.vote_type === 'plus' ? '🟢 +10 Elo' : '🔴 -10 Elo';
           
           container.innerHTML += `
-            <div style="border: 1px solid var(--border-color); padding: 12px; margin-bottom: 8px; border-radius: var(--radius-md); background: #fafafa; font-size:13px;">
+            <div style="border: 1px solid var(--border-color); padding: 12px; margin-bottom: 8px; border-radius: var(--radius-md); background: var(--card-bg); font-size:13px;">
               <p style="margin:2px 0;"><b>Кому:</b> ${teacherName} | <b>Тип:</b> ${typeLabel}</p>
               <p style="margin:2px 0;"><b>Автор:</b> ${c.user_nickname} (ID: ${c.user_telegram_id})</p>
-              <p style="margin:4px 0 8px 0; color:#444;"><b>Отзыв:</b> ${c.text}</p>
+              <p style="margin:4px 0 8px 0; color:var(--text-main);"><b>Отзыв:</b> ${c.text}</p>
               <div style="display:flex; gap:6px;">
                 <button onclick="approveComment(${c.id}, ${c.teacher_id}, '${c.vote_type}')" style="background:var(--success); color:white; flex:1;">✅ Принять</button>
                 <button onclick="rejectComment(${c.id})" style="background:var(--danger); color:white; flex:1;">❌ Отклонить</button>
@@ -1104,9 +913,9 @@
             <div style="border-bottom: 1px solid var(--border-color); padding: 10px 0; font-size: 13px;">
               <b>${u.nickname}</b> (${u.username || 'без_тега'}) | ID: ${uId}<br>
               <span style="color:var(--text-muted);">Предупреждений: ${u.warnings || 0} ${statusText ? `| Status: <b>${statusText}</b>` : ''}</span>
-              ${u.warning_reason ? `<br><span style="color:#d97706;"><i>Причина: ${u.warning_reason}</i></span>` : ''}
+              ${u.warning_reason ? `<br><span style="color:var(--warning);"><i>Причина: ${u.warning_reason}</i></span>` : ''}
               <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
-                <button onclick="changeUserNick('${uId}')" style="font-size:11px; padding:6px 10px; background:#e5e5ea; color:#333;">✏️ Ник</button>
+                <button onclick="changeUserNick('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--input-bg); color:var(--text-main);">✏️ Ник</button>
                 <button onclick="setUserStatus('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--primary); color:white;">🏷️ Статус</button>
                 <button onclick="addWarningWithReason('${uId}', ${u.warnings || 0})" style="font-size:11px; padding:6px 10px; background:var(--warning); color:white;">⚠️ Варн</button>
                 <button onclick="resetWarnings('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--success); color:white;">🔄 Сброс</button>
