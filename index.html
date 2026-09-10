@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Рейтинг Воспитателей</title>
+  <title>Рейтинг Воспитателей — Trace Lab</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -349,9 +349,97 @@
 
     .page-section { display: none; }
     .page-section.active { display: block; }
+
+    /* --- СТИЛИ МОДАЛКИ ПРАВИЛ --- */
+    .rules-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .rules-card {
+      background-color: #1c1c1e;
+      color: #ffffff;
+      border-radius: 24px;
+      max-width: 380px;
+      width: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      border: 1px solid #2c2c2e;
+    }
+    .rules-header { text-align: center; margin-bottom: 16px; }
+    .rules-icon { font-size: 48px; display: block; margin-bottom: 10px; }
+    .rules-title { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+    .rules-step { font-size: 12px; color: #8e8e93; font-weight: 500; }
+    .rules-body {
+      min-height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 8px;
+    }
+    .rules-text { font-size: 15px; line-height: 1.4; color: #e5e5ea; }
+    .rules-dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      margin: 16px 0;
+    }
+    .dot {
+      height: 6px; width: 6px;
+      background-color: #3a3a3c;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+    }
+    .dot.active { background-color: #007aff; width: 16px; }
+    .rules-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background-color: #007aff;
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .rules-btn:disabled {
+      background-color: #3a3a3c;
+      color: #8e8e93;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
+
+  <!-- МОДАЛЬНОЕ ОКНО ПРАВИЛ TRACE LAB -->
+  <div id="rulesModal" class="rules-overlay" style="display: none;">
+    <div class="rules-card">
+      <div class="rules-header">
+        <span id="rulesIcon" class="rules-icon">🤖</span>
+        <h2 id="rulesTitle" class="rules-title">1. Скрипты и автокликеры</h2>
+        <div id="rulesStep" class="rules-step">Правило 1 из 8</div>
+      </div>
+
+      <div class="rules-body">
+        <p id="rulesText" class="rules-text">Загрузка правил...</p>
+      </div>
+
+      <div id="rulesDots" class="rules-dots"></div>
+
+      <button id="rulesBtn" class="rules-btn" disabled>Ждите (6 сек...)</button>
+    </div>
+  </div>
 
   <div class="top-bar">
     <button class="menu-btn" onclick="openSidebar()">
@@ -491,7 +579,119 @@
     let versionClickCount = 0;
     let versionClickTimer = null;
 
+    // --- ЛОГИКА 8 СЛАЙДОВ ПРАВИЛ ---
+    const rulesSlides = [
+      {
+        icon: '🤖',
+        title: '1. Скрипты и автокликеры',
+        text: 'Запрещено использовать любой сторонний софт, ботов, автокликеры и симуляторы нажатий. Вся автоматизация отслеживается.'
+      },
+      {
+        icon: '👥',
+        title: '2. Мультиаккаунты',
+        text: '1 человек = 1 Telegram-аккаунт. Создавать фермы аккаунтов и твинки строго запрещено.'
+      },
+      {
+        icon: '⭐️',
+        title: '3. Накрутка и слив баллов',
+        text: 'Запрещено ставить оценки нечестным путём, специально накручивать или занижать баллы воспитателям.'
+      },
+      {
+        icon: '🐛',
+        title: '4. Использование багов',
+        text: 'Нашли уязвимость или ошибку? Сообщите администрации. За багоюз и использование ошибок в личных целях — блокировка.'
+      },
+      {
+        icon: '🤬',
+        title: '5. Мат и оскорбления',
+        text: 'Запрещено материться, обзываться, провоцировать конфликты и ругаться с администрацией.'
+      },
+      {
+        icon: '📢',
+        title: '6. Спам',
+        text: 'Запрещено присылать спам, рекламу, рассылки и дублировать одинаковые сообщения.'
+      },
+      {
+        icon: '🚫',
+        title: '7. «Дичь»',
+        text: 'Запрещено писать сообщения и присылать контент, который не относится к теме нашей программы или фирмы.'
+      },
+      {
+        icon: '🛑',
+        title: '8. Непослушание',
+        text: 'Запрещено мешать работе сервиса, создавать помехи бета-тесту и игнорировать прямые требования администрации.'
+      }
+    ];
+
+    let currentRuleStep = 0;
+    let ruleTimer = null;
+    let ruleTimeLeft = 6;
+    const RULE_COOLDOWN = 6; // 6 секунд КД
+
+    function checkAndShowRules() {
+      if (!localStorage.getItem('tracelab_rules_accepted')) {
+        document.getElementById('rulesModal').style.display = 'flex';
+        initRulesDots();
+        renderRuleSlide();
+      }
+    }
+
+    function initRulesDots() {
+      const container = document.getElementById('rulesDots');
+      container.innerHTML = '';
+      rulesSlides.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = `dot ${i === 0 ? 'active' : ''}`;
+        container.appendChild(dot);
+      });
+    }
+
+    function renderRuleSlide() {
+      clearInterval(ruleTimer);
+      const slide = rulesSlides[currentRuleStep];
+
+      document.getElementById('rulesIcon').textContent = slide.icon;
+      document.getElementById('rulesTitle').textContent = slide.title;
+      document.getElementById('rulesText').textContent = slide.text;
+      document.getElementById('rulesStep').textContent = `Правило ${currentRuleStep + 1} из ${rulesSlides.length}`;
+
+      document.querySelectorAll('#rulesDots .dot').forEach((dot, idx) => {
+        dot.className = `dot ${idx === currentRuleStep ? 'active' : ''}`;
+      });
+
+      const btn = document.getElementById('rulesBtn');
+      ruleTimeLeft = RULE_COOLDOWN;
+      btn.disabled = true;
+      btn.textContent = `Ждите (${ruleTimeLeft} сек...)`;
+
+      ruleTimer = setInterval(() => {
+        ruleTimeLeft--;
+        if (ruleTimeLeft > 0) {
+          btn.textContent = `Ждите (${ruleTimeLeft} сек...)`;
+        } else {
+          clearInterval(ruleTimer);
+          btn.disabled = false;
+          if (currentRuleStep === rulesSlides.length - 1) {
+            btn.textContent = 'Начать использовать';
+          } else {
+            btn.textContent = 'Продолжить';
+          }
+        }
+      }, 1000);
+    }
+
+    document.getElementById('rulesBtn').addEventListener('click', () => {
+      if (currentRuleStep < rulesSlides.length - 1) {
+        currentRuleStep++;
+        renderRuleSlide();
+      } else {
+        localStorage.setItem('tracelab_rules_accepted', 'true');
+        document.getElementById('rulesModal').style.display = 'none';
+      }
+    });
+
     window.addEventListener('DOMContentLoaded', async () => {
+      checkAndShowRules();
       await initUser();
       await loadStaff();
     });
