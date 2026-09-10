@@ -15,22 +15,14 @@
       --border-color: #27272a;
       --input-bg: #27272a;
       --primary: #3b82f6;
+      --primary-hover: #2563eb;
       --success: #22c55e;
       --warning: #f59e0b;
       --danger: #ef4444;
       --radius-sm: 8px;
       --radius-md: 12px;
+      --radius-lg: 16px;
       --admin-bg: #18181b;
-    }
-
-    [data-theme="light"] {
-      --bg-color: #f4f4f5;
-      --card-bg: #ffffff;
-      --text-main: #18181b;
-      --text-muted: #71717a;
-      --border-color: #e4e4e7;
-      --input-bg: #f4f4f5;
-      --admin-bg: #f4f4f5;
     }
 
     * {
@@ -49,7 +41,6 @@
       align-items: center;
       min-height: 100vh;
       padding-bottom: 20px;
-      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .app-container {
@@ -89,8 +80,15 @@
       align-items: center;
     }
 
-    .profile-name { font-weight: 600; font-size: 16px; }
-    .profile-tag { font-size: 12px; color: var(--text-muted); }
+    .profile-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .profile-tag {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
 
     .badges-container {
       display: flex;
@@ -126,8 +124,13 @@
       font-weight: 500;
     }
 
-    .page-section { display: none; }
-    .page-section.active { display: block; }
+    .page-section {
+      display: none;
+    }
+
+    .page-section.active {
+      display: block;
+    }
 
     .card {
       background: var(--card-bg);
@@ -144,8 +147,15 @@
       margin-bottom: 8px;
     }
 
-    .staff-name { font-size: 16px; font-weight: 600; }
-    .staff-rank { font-size: 14px; font-weight: 700; }
+    .staff-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .staff-rank {
+      font-size: 14px;
+      font-weight: 700;
+    }
 
     .elo-container {
       font-size: 13px;
@@ -153,7 +163,7 @@
       margin-bottom: 12px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 10px 12px;
       background: var(--input-bg);
@@ -175,17 +185,35 @@
       transition: opacity 0.2s ease;
     }
 
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
-    .vote-btns { display: flex; gap: 8px; }
-    .btn-plus { background: var(--success); color: white; flex: 1; }
-    .btn-minus { background: var(--danger); color: white; flex: 1; }
+    .vote-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-plus {
+      background: var(--success);
+      color: white;
+      flex: 1;
+    }
+
+    .btn-minus {
+      background: var(--danger);
+      color: white;
+      flex: 1;
+    }
 
     /* Сайдбар */
     .sidebar-overlay {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background: rgba(0, 0, 0, 0.5);
       display: none;
       z-index: 100;
@@ -193,8 +221,10 @@
 
     .sidebar {
       position: fixed;
-      top: 0; left: -280px;
-      width: 280px; height: 100vh;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
       background: var(--card-bg);
       border-right: 1px solid var(--border-color);
       z-index: 101;
@@ -204,7 +234,9 @@
       padding: 20px 16px;
     }
 
-    .sidebar.active { left: 0; }
+    .sidebar.active {
+      left: 0;
+    }
 
     .sidebar-menu-item {
       padding: 12px;
@@ -227,25 +259,13 @@
       text-align: center;
     }
 
-    .theme-selector-container {
-      margin-top: 15px;
-      padding: 10px 12px;
-      background: var(--input-bg);
-      border-radius: var(--radius-sm);
-    }
-
-    .theme-selector-container label {
-      font-size: 12px;
-      color: var(--text-muted);
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    /* Модальные окна */
+    /* Модалки и Банеры */
     .custom-modal-overlay {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background: rgba(0, 0, 0, 0.6);
       display: none;
       justify-content: center;
@@ -274,12 +294,17 @@
       border-radius: 20px;
       font-size: 12px;
       z-index: 300;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
+    /* Админка */
     .admin-widget {
       position: fixed;
-      bottom: 10px; right: 10px; left: 10px;
-      max-width: 460px; margin: 0 auto;
+      bottom: 10px;
+      right: 10px;
+      left: 10px;
+      max-width: 460px;
+      margin: 0 auto;
       background: var(--admin-bg);
       border: 2px solid var(--primary);
       border-radius: var(--radius-md);
@@ -308,14 +333,6 @@
     <div class="sidebar-menu-item" onclick="switchTab('shifts')">🕒 Смены</div>
     
     <div class="sidebar-menu-item support-btn" onclick="contactSupport()">💬 Поддержка / Баги</div>
-
-    <div class="theme-selector-container">
-      <label for="theme-select">🎨 Тема оформления:</label>
-      <select id="theme-select" onchange="changeTheme(this.value)" style="margin-bottom:0;">
-        <option value="dark">Тёмная</option>
-        <option value="light">Светлая</option>
-      </select>
-    </div>
 
     <div style="margin-top: auto; font-size: 11px; color: var(--text-muted); cursor: pointer;" onclick="handleVersionClick()">
       Версия beta 0.1
@@ -359,7 +376,7 @@
     </div>
   </div>
 
-  <!-- Оверлей Бан-панели / Варнов -->
+  <!-- Оверлей Варнов / Бан-панели -->
   <div class="custom-modal-overlay" id="warning-banner-overlay">
     <div class="custom-modal" id="warning-banner-card">
       <h3 id="warning-banner-title" style="color:var(--warning);">Предупреждение</h3>
@@ -370,7 +387,7 @@
     </div>
   </div>
 
-  <!-- Диалоговое окно -->
+  <!-- Модальное окно для сообщений и ввода -->
   <div class="custom-modal-overlay" id="custom-modal-overlay">
     <div class="custom-modal">
       <h3 id="modal-title" style="margin-bottom:8px;"></h3>
@@ -411,9 +428,8 @@
   </div>
 
   <script>
-    // Подключение к Supabase (автоопределение параметров при их наличии в окне)
-    const SUPABASE_URL = window.SUPABASE_URL || "https://your-supabase-url.supabase.co";
-    const SUPABASE_ANON_KEY = window.SUPABASE_KEY || "your-anon-key";
+    const SUPABASE_URL = "https://xyzcompany.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const tg = window.Telegram?.WebApp;
@@ -431,25 +447,9 @@
     let modalCallback = null;
 
     window.addEventListener('DOMContentLoaded', () => {
-      initTheme();
       initUser();
       loadStaff();
     });
-
-    function initTheme() {
-      const savedTheme = localStorage.getItem('app_theme') || 'dark';
-      applyTheme(savedTheme);
-      document.getElementById('theme-select').value = savedTheme;
-    }
-
-    function changeTheme(themeName) {
-      localStorage.setItem('app_theme', themeName);
-      applyTheme(themeName);
-    }
-
-    function applyTheme(themeName) {
-      document.documentElement.setAttribute('data-theme', themeName);
-    }
 
     function showToast(text) {
       const existingToast = document.querySelector('.toast-message');
@@ -495,6 +495,10 @@
         <button onclick="closeModal()" style="background:var(--danger); color:white; flex:1;">Отмена</button>
       `;
       document.getElementById('custom-modal-overlay').style.display = 'flex';
+      setTimeout(() => {
+        const inp = document.getElementById('modal-input-field');
+        if (inp) inp.focus();
+      }, 100);
     }
 
     function submitPrompt() {
@@ -537,126 +541,147 @@
     }
 
     async function initUser() {
-      try {
-        let { data: user } = await supabaseClient.from('users').select('*').eq('telegram_id', String(currentUserId)).maybeSingle();
+      let { data: user } = await supabaseClient.from('users').select('*').eq('telegram_id', String(currentUserId)).maybeSingle();
 
-        if (!user) {
-          const { data: newUser } = await supabaseClient.from('users').insert([{ 
-            telegram_id: String(currentUserId), 
-            nickname: autoNickname,
-            username: currentUsername,
-            warnings: 0
-          }]).select().single();
-          currentUser = newUser || { telegram_id: String(currentUserId), nickname: autoNickname, warnings: 0 };
+      if (!user) {
+        const { data: newUser } = await supabaseClient.from('users').insert([{ 
+          telegram_id: String(currentUserId), 
+          nickname: autoNickname,
+          username: currentUsername,
+          warnings: 0
+        }]).select().single();
+        currentUser = newUser || { telegram_id: String(currentUserId), nickname: autoNickname, warnings: 0 };
+      } else {
+        currentUser = user;
+        if (user.username !== currentUsername) {
+          await supabaseClient.from('users').update({ username: currentUsername }).eq('telegram_id', String(currentUserId));
+        }
+      }
+
+      const warningsCount = currentUser.warnings || 0;
+      const isNaughty = warningsCount >= 4;
+      const customStatus = currentUser.custom_status || null;
+
+      document.getElementById('user-display').innerHTML = `
+        <div class="profile-header">
+          <span class="profile-name">${currentUser.nickname}</span>
+          <span class="profile-tag">${currentUser.username || 'без_тега'}</span>
+        </div>
+        <div class="badges-container">
+          ${warningsCount > 0 ? `<span class="badge">⚠️ Предупреждений: ${warningsCount}</span>` : ''}
+          ${customStatus ? `<span class="badge-custom">🏷️ ${customStatus}</span>` : ''}
+          ${isNaughty && !customStatus ? `<span class="badge-naughty">😈 Непослушный</span>` : ''}
+        </div>
+      `;
+
+      if (warningsCount > 0) {
+        const bannerCard = document.getElementById('warning-banner-card');
+        const titleEl = document.getElementById('warning-banner-title');
+        const countEl = document.getElementById('warning-count-text');
+        const subtextEl = document.getElementById('warning-subtext');
+        const reasonEl = document.getElementById('warning-banner-reason');
+        const actionContainer = document.getElementById('warning-action-buttons');
+
+        reasonEl.innerText = currentUser.warning_reason || "Причина не указана администратором.";
+
+        if (warningsCount === 1) {
+          titleEl.innerText = "⚠️ 1-е Предупреждение";
+          countEl.innerText = "Будьте внимательны с правилами.";
+          subtextEl.innerText = "Пожалуйста, воздержитесь от нарушений в дальнейшем.";
+          actionContainer.innerHTML = `
+            <button onclick="acknowledgeWarning()" style="background: var(--success); color: white;">👍 Понятно</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать в саппорт</button>
+          `;
+        } else if (warningsCount === 2) {
+          titleEl.innerText = "⚠️ 2-е Предупреждение";
+          countEl.innerText = "Обратите внимание на выписанные замечания!";
+          subtextEl.innerText = "Следующие нарушения могут привести к блокировке.";
+          actionContainer.innerHTML = `
+            <button onclick="acknowledgeWarning()" style="background: var(--success); color: white;">👍 Понятно</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать в саппорт</button>
+          `;
+        } else if (warningsCount === 3) {
+          titleEl.innerText = "🚨 Последнее Предупреждение (3/3)";
+          countEl.innerText = "Вы на грани полной блокировки!";
+          subtextEl.innerText = "4-е предупреждение приведет к ограничению доступа.";
+          actionContainer.innerHTML = `
+            <button onclick="acknowledgeWarning()" style="background: var(--success); color: white;">👍 Понятно</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать в саппорт</button>
+          `;
         } else {
-          currentUser = user;
-          if (user.username !== currentUsername) {
-            await supabaseClient.from('users').update({ username: currentUsername }).eq('telegram_id', String(currentUserId));
-          }
+          bannerCard.classList.add('banned');
+          titleEl.innerText = "⛔ Аккаунт заблокирован";
+          countEl.innerText = "Вы превысили лимит допустимых нарушений.";
+          subtextEl.innerText = "Разблокировка возможна после обращения к администрации.";
+          actionContainer.innerHTML = `
+            <button onclick="payFine()" style="background: var(--danger); color: white;">💳 Оплатить разбан</button>
+            <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать администратору</button>
+          `;
         }
 
-        const warningsCount = currentUser.warnings || 0;
-        const isNaughty = warningsCount >= 4;
-        const customStatus = currentUser.custom_status || null;
-
-        document.getElementById('user-display').innerHTML = `
-          <div class="profile-header">
-            <span class="profile-name">${currentUser.nickname}</span>
-            <span class="profile-tag">${currentUser.username || 'без_тега'}</span>
-          </div>
-          <div class="badges-container">
-            ${warningsCount > 0 ? `<span class="badge">⚠️ Предупреждений: ${warningsCount}</span>` : ''}
-            ${customStatus ? `<span class="badge-custom">🏷️ ${customStatus}</span>` : ''}
-            ${isNaughty && !customStatus ? `<span class="badge-naughty">😈 Непослушный</span>` : ''}
-          </div>
-        `;
-
-        if (warningsCount > 0) {
-          const bannerCard = document.getElementById('warning-banner-card');
-          const titleEl = document.getElementById('warning-banner-title');
-          const countEl = document.getElementById('warning-count-text');
-          const subtextEl = document.getElementById('warning-subtext');
-          const reasonEl = document.getElementById('warning-banner-reason');
-          const actionContainer = document.getElementById('warning-action-buttons');
-
-          reasonEl.innerText = currentUser.warning_reason || "Причина не указана администратором.";
-
-          if (warningsCount < 4) {
-            titleEl.innerText = `⚠️ ${warningsCount}-е Предупреждение`;
-            countEl.innerText = "Будьте внимательны с правилами.";
-            subtextEl.innerText = "Пожалуйста, воздержитесь от нарушений в дальнейшем.";
-            actionContainer.innerHTML = `
-              <button onclick="acknowledgeWarning()" style="background: var(--success); color: white;">👍 Понятно</button>
-              <button onclick="contactSupport()" style="background: var(--primary); color: white;">💬 Написать в саппорт</button>
-            `;
-          } else {
-            bannerCard.classList.add('banned');
-            titleEl.innerText = "⛔ Аккаунт заблокирован";
-            countEl.innerText = "Вы превысили лимит допустимых нарушений.";
-            subtextEl.innerText = "Разблокировка возможна после обращения к администрации.";
-            actionContainer.innerHTML = `
-              <button onclick="contactSupport()" style="background: var(--primary); color: white; width:100%;">💬 Написать администратору</button>
-            `;
-          }
-
-          document.getElementById('warning-banner-overlay').style.display = 'flex';
-        } else {
-          document.getElementById('warning-banner-overlay').style.display = 'none';
-        }
-      } catch (err) {
-        document.getElementById('user-display').innerHTML = `<div style="color:var(--text-muted)">Гостевой режим</div>`;
+        document.getElementById('warning-banner-overlay').style.display = 'flex';
+      } else {
+        document.getElementById('warning-banner-overlay').style.display = 'none';
       }
     }
 
     function acknowledgeWarning() {
       document.getElementById('warning-banner-overlay').style.display = 'none';
+      showAlert("Запрос передан администратору.", "Принято");
+    }
+
+    function payFine() {
+      showAlert("Для оплаты и снятия ограничений свяжитесь с поддержкой.", "Разблокировка");
     }
 
     async function loadStaff() {
+      const { data: staff, error } = await supabaseClient
+        .from('staff')
+        .select('*')
+        .order('elo', { ascending: false })
+        .order('id', { ascending: true });
+
       const container = document.getElementById('staff-list');
       const select = document.getElementById('admin-staff-select');
+      
+      if (error) {
+        container.innerHTML = `<p style="color:var(--danger)">Ошибка загрузки данных!</p>`;
+        return;
+      }
 
-      try {
-        const { data: staff, error } = await supabaseClient
-          .from('staff')
-          .select('*')
-          .order('elo', { ascending: false });
+      container.innerHTML = '';
+      select.innerHTML = '';
+      staffMap = {};
 
-        if (error) throw error;
+      if (staff && staff.length > 0) {
+        staff.forEach((s, index) => {
+          staffMap[s.id] = s.name;
+          
+          let rankBadge = `#${index + 1}`;
+          if (index === 0) rankBadge = '🥇';
+          else if (index === 1) rankBadge = '🥈';
+          else if (index === 2) rankBadge = '🥉';
 
-        container.innerHTML = '';
-        select.innerHTML = '';
-        staffMap = {};
-
-        if (staff && staff.length > 0) {
-          staff.forEach((s, index) => {
-            staffMap[s.id] = s.name;
-            let rankBadge = `#${index + 1}`;
-            if (index === 0) rankBadge = '🥇';
-            else if (index === 1) rankBadge = '🥈';
-            else if (index === 2) rankBadge = '🥉';
-
-            container.innerHTML += `
-              <div class="card">
-                <div class="staff-card-header">
-                  <h3 class="staff-name">${s.name}</h3>
-                  <span class="staff-rank">${rankBadge}</span>
-                </div>
-                <div class="elo-container">⭐ ${s.elo} Elo</div>
-                <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off">
-                <div class="vote-btns">
-                  <button class="btn-plus" id="btn-plus-${s.id}" onclick="sendVote(${s.id}, 'plus')">+10 Elo</button>
-                  <button class="btn-minus" id="btn-minus-${s.id}" onclick="sendVote(${s.id}, 'minus')">-10 Elo</button>
-                </div>
+          container.innerHTML += `
+            <div class="card">
+              <div class="staff-card-header">
+                <h3 class="staff-name">${s.name}</h3>
+                <span class="staff-rank">${rankBadge}</span>
               </div>
-            `;
-            select.innerHTML += `<option value="${s.id}">ID ${s.id} - ${s.name} (${s.elo} Elo)</option>`;
-          });
-        } else {
-          container.innerHTML = `<p style="color:var(--text-muted)">Список персонала пока пуст.</p>`;
-        }
-      } catch (err) {
-        container.innerHTML = `<div class="card"><p style="color:var(--danger)">Ошибка загрузки рейтинга!</p></div>`;
+              <div class="elo-container">⭐ ${s.elo} Elo</div>
+              <input type="text" id="comment-${s.id}" placeholder="Напишите отзыв (мин. 10 символов)..." autocomplete="off">
+              <div class="vote-btns">
+                <button class="btn-plus" id="btn-plus-${s.id}" onclick="sendVote(${s.id}, 'plus')">+10 Elo</button>
+                <button class="btn-minus" id="btn-minus-${s.id}" onclick="sendVote(${s.id}, 'minus')">-10 Elo</button>
+              </div>
+            </div>
+          `;
+        });
+
+        const sortedById = [...staff].sort((a, b) => a.id - b.id);
+        sortedById.forEach(s => {
+          select.innerHTML += `<option value="${s.id}">ID ${s.id} - ${s.name} (${s.elo} Elo)</option>`;
+        });
       }
     }
 
@@ -666,6 +691,16 @@
       if (!isAdmin && (currentUser.warnings || 0) >= 4) {
         showAlert("Ваш аккаунт заблокирован за нарушения!");
         return;
+      }
+
+      if (!isAdmin && currentUser.ban_until) {
+        const banEnd = new Date(currentUser.ban_until).getTime();
+        if (banEnd > new Date().getTime()) {
+          const leftMs = banEnd - new Date().getTime();
+          const leftMin = Math.ceil(leftMs / 60000);
+          showAlert(`Вам выдан временный КД! Осталось: ${Math.floor(leftMin / 60)} ч ${leftMin % 60} мин.`);
+          return;
+        }
       }
 
       const input = document.getElementById(`comment-${staffId}`);
@@ -706,7 +741,7 @@
       if (btnMinus) btnMinus.disabled = false;
 
       if (error) {
-        showAlert("Ошибка отправки: " + error.message);
+        showAlert("Ошибка: " + error.message);
         return;
       }
 
@@ -717,7 +752,7 @@
       }
 
       if (input) input.value = "";
-      showAlert(isAdmin ? "Отзыв отправлен без КД!" : "Отзыв отправлен на модерацию!");
+      showAlert(isAdmin ? "Отзыв отправлен (Без КД)!" : "Отзыв отправлен на модерацию!");
     }
 
     function promptAdminPassword() {
@@ -758,7 +793,7 @@
     function closeAdminPanel() {
       isAdmin = false;
       document.getElementById('admin-widget').style.display = 'none';
-      showAlert("Админ-панель закрыта. Тюнинг КД восстановлен.");
+      showAlert("Панель закрыта.");
     }
 
     async function setStaffElo() {
@@ -770,37 +805,33 @@
       if (error) {
         showAlert("Ошибка: " + error.message);
       } else {
-        showAlert("Elo успешно обновлено!");
+        showAlert("Elo обновлено!");
         loadStaff();
       }
     }
 
     async function loadPendingComments() {
+      const { data: comments } = await supabaseClient.from('comments').select('*').eq('status', 'pending');
       const container = document.getElementById('pending-comments');
-      try {
-        const { data: comments } = await supabaseClient.from('comments').select('*').eq('status', 'pending');
-        container.innerHTML = comments && comments.length ? '' : '<p style="color:var(--text-muted); font-size:13px;">Нет отзывов на проверке</p>';
+      container.innerHTML = comments && comments.length ? '' : '<p style="color:var(--text-muted); font-size:13px;">Нет отзывов на проверке</p>';
 
-        if (comments) {
-          comments.forEach(c => {
-            const teacherName = staffMap[c.teacher_id] || `ID ${c.teacher_id}`;
-            const typeLabel = c.vote_type === 'plus' ? '🟢 +10 Elo' : '🔴 -10 Elo';
-            
-            container.innerHTML += `
-              <div style="border: 1px solid var(--border-color); padding: 12px; margin-bottom: 8px; border-radius: var(--radius-md); background: var(--card-bg); font-size:13px;">
-                <p style="margin:2px 0;"><b>Кому:</b> ${teacherName} | <b>Тип:</b> ${typeLabel}</p>
-                <p style="margin:2px 0;"><b>Автор:</b> ${c.user_nickname} (ID: ${c.user_telegram_id})</p>
-                <p style="margin:4px 0 8px 0; color:var(--text-main);"><b>Отзыв:</b> ${c.text}</p>
-                <div style="display:flex; gap:6px;">
-                  <button onclick="approveComment(${c.id}, ${c.teacher_id}, '${c.vote_type}')" style="background:var(--success); color:white; flex:1;">✅ Принять</button>
-                  <button onclick="rejectComment(${c.id})" style="background:var(--danger); color:white; flex:1;">❌ Отклонить</button>
-                </div>
+      if (comments) {
+        comments.forEach(c => {
+          const teacherName = staffMap[c.teacher_id] || `ID ${c.teacher_id}`;
+          const typeLabel = c.vote_type === 'plus' ? '🟢 +10 Elo' : '🔴 -10 Elo';
+          
+          container.innerHTML += `
+            <div style="border: 1px solid var(--border-color); padding: 12px; margin-bottom: 8px; border-radius: var(--radius-md); background: var(--card-bg); font-size:13px;">
+              <p style="margin:2px 0;"><b>Кому:</b> ${teacherName} | <b>Тип:</b> ${typeLabel}</p>
+              <p style="margin:2px 0;"><b>Автор:</b> ${c.user_nickname} (ID: ${c.user_telegram_id})</p>
+              <p style="margin:4px 0 8px 0; color:var(--text-main);"><b>Отзыв:</b> ${c.text}</p>
+              <div style="display:flex; gap:6px;">
+                <button onclick="approveComment(${c.id}, ${c.teacher_id}, '${c.vote_type}')" style="background:var(--success); color:white; flex:1;">✅ Принять</button>
+                <button onclick="rejectComment(${c.id})" style="background:var(--danger); color:white; flex:1;">❌ Отклонить</button>
               </div>
-            `;
-          });
-        }
-      } catch (err) {
-        container.innerHTML = `<p style="color:var(--danger); font-size:13px;">Ошибка загрузки отзывов</p>`;
+            </div>
+          `;
+        });
       }
     }
 
@@ -822,68 +853,137 @@
     }
 
     async function loadUsersList() {
+      const { data: users, error } = await supabaseClient.from('users').select('*');
       const container = document.getElementById('users-list');
-      try {
-        const { data: users, error } = await supabaseClient.from('users').select('*');
-        if (error) throw error;
+      
+      if (error) {
+        container.innerHTML = `<p style="color:var(--danger)">Ошибка: ${error.message}</p>`;
+        return;
+      }
 
-        container.innerHTML = users && users.length ? '' : 'Пусто';
+      container.innerHTML = users && users.length ? '' : 'Пусто';
 
-        if (users) {
-          users.forEach(u => {
-            const uId = String(u.telegram_id);
-            const statusText = u.custom_status ? `🏷️ ${u.custom_status}` : (u.warnings >= 4 ? '😈 Непослушный' : '');
-            
-            container.innerHTML += `
-              <div style="border-bottom: 1px solid var(--border-color); padding: 10px 0; font-size: 13px;">
-                <b>${u.nickname}</b> (${u.username || 'без_тега'}) | ID: ${uId}<br>
-                <span style="color:var(--text-muted);">Предупреждений: ${u.warnings || 0} ${statusText ? `| Status: <b>${statusText}</b>` : ''}</span>
-                <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
-                  <button onclick="changeUserNick('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--input-bg); color:var(--text-main);">✏️ Ник</button>
-                  <button onclick="setUserStatus('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--primary); color:white;">🏷️ Статус</button>
-                  <button onclick="addWarningWithReason('${uId}', ${u.warnings || 0})" style="font-size:11px; padding:6px 10px; background:var(--warning); color:white;">⚠️ Варн</button>
-                  <button onclick="resetWarnings('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--success); color:white;">🔄 Сброс</button>
-                </div>
+      if (users) {
+        users.forEach(u => {
+          const uId = String(u.telegram_id);
+          const statusText = u.custom_status ? `🏷️ ${u.custom_status}` : (u.warnings >= 4 ? '😈 Непослушный' : '');
+          
+          container.innerHTML += `
+            <div style="border-bottom: 1px solid var(--border-color); padding: 10px 0; font-size: 13px;">
+              <b>${u.nickname}</b> (${u.username || 'без_тега'}) | ID: ${uId}<br>
+              <span style="color:var(--text-muted);">Предупреждений: ${u.warnings || 0} ${statusText ? `| Status: <b>${statusText}</b>` : ''}</span>
+              ${u.warning_reason ? `<br><span style="color:var(--warning);"><i>Причина: ${u.warning_reason}</i></span>` : ''}
+              <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
+                <button onclick="changeUserNick('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--input-bg); color:var(--text-main);">✏️ Ник</button>
+                <button onclick="setUserStatus('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--primary); color:white;">🏷️ Статус</button>
+                <button onclick="addWarningWithReason('${uId}', ${u.warnings || 0})" style="font-size:11px; padding:6px 10px; background:var(--warning); color:white;">⚠️ Варн</button>
+                <button onclick="resetWarnings('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--success); color:white;">🔄 Сброс</button>
+                <button onclick="giveCustomBan('${uId}')" style="font-size:11px; padding:6px 10px; background:var(--danger); color:white;">⏳ КД</button>
               </div>
-            `;
-          });
-        }
-      } catch (err) {
-        container.innerHTML = `<p style="color:var(--danger); font-size:13px;">Ошибка загрузки списка пользователей</p>`;
+            </div>
+          `;
+        });
       }
     }
 
     function changeUserNick(userId) {
       showPrompt("Введите новый никнейм:", "", async (newNick) => {
         if (!newNick) return;
-        await supabaseClient.from('users').update({ nickname: newNick.trim() }).eq('telegram_id', String(userId));
-        loadUsersList();
+        const targetId = String(userId);
+        const { error } = await supabaseClient.from('users').update({ nickname: newNick.trim() }).eq('telegram_id', targetId);
+        
+        if (error) {
+          showAlert("Ошибка: " + error.message);
+        } else {
+          showAlert("Ник обновлен!");
+          await loadUsersList();
+          if (targetId === String(currentUserId)) await initUser();
+        }
       });
     }
 
     function setUserStatus(userId) {
       showPrompt("Введите новый статус:", "Новичок", async (status) => {
         if (status === null) return;
-        await supabaseClient.from('users').update({ custom_status: status.trim() || null }).eq('telegram_id', String(userId));
-        loadUsersList();
+        const targetId = String(userId);
+        const formattedStatus = status.trim() ? status.trim() : null;
+
+        const { error } = await supabaseClient.from('users').update({ custom_status: formattedStatus }).eq('telegram_id', targetId);
+
+        if (error) {
+          showAlert("Ошибка: " + error.message);
+        } else {
+          showAlert("Статус сохранен!");
+          await loadUsersList();
+          if (targetId === String(currentUserId)) await initUser();
+        }
       });
     }
 
     function addWarningWithReason(userId, currentWarns) {
       showPrompt("Укажите причину предупреждения:", "", async (reason) => {
-        if (!reason || !reason.trim()) return;
-        await supabaseClient.from('users').update({
-          warnings: parseInt(currentWarns || 0) + 1,
+        if (!reason || !reason.trim()) {
+          showAlert("Причина не может быть пустой!");
+          return;
+        }
+
+        const targetId = String(userId);
+        const newWarns = parseInt(currentWarns || 0) + 1;
+
+        const { error } = await supabaseClient.from('users').update({
+          warnings: newWarns,
           warning_reason: reason.trim()
-        }).eq('telegram_id', String(userId));
-        loadUsersList();
+        }).eq('telegram_id', targetId);
+
+        if (error) {
+          showAlert("Ошибка: " + error.message);
+        } else {
+          showAlert("Предупреждение выдано!");
+          await loadUsersList();
+          if (targetId === String(currentUserId)) await initUser();
+        }
       });
     }
 
     async function resetWarnings(userId) {
-      await supabaseClient.from('users').update({ warnings: 0, warning_reason: null, custom_status: null }).eq('telegram_id', String(userId));
-      loadUsersList();
+      const targetId = String(userId);
+
+      const { error } = await supabaseClient.from('users').update({ 
+        warnings: 0,
+        warning_reason: null,
+        custom_status: null,
+        ban_until: null
+      }).eq('telegram_id', targetId);
+
+      if (error) {
+        showAlert("Ошибка сброса: " + error.message);
+      } else {
+        showAlert("Сброс выполнен!");
+        await loadUsersList();
+        if (targetId === String(currentUserId)) await initUser();
+      }
+    }
+
+    function giveCustomBan(userId) {
+      showPrompt("Часов блокировки:", "1", (hours) => {
+        if (hours === null) return;
+        showPrompt("Минут блокировки:", "0", async (mins) => {
+          if (mins === null) return;
+          const targetId = String(userId);
+          const totalMs = (parseInt(hours || 0) * 3600 + parseInt(mins || 0) * 60) * 1000;
+          const banUntil = new Date(new Date().getTime() + totalMs).toISOString();
+
+          const { error } = await supabaseClient.from('users').update({ ban_until: banUntil }).eq('telegram_id', targetId);
+          if (error) {
+            showAlert("Ошибка: " + error.message);
+          } else {
+            showAlert(`КД выдан на ${hours} ч ${mins} мин!`);
+            await loadUsersList();
+            if (targetId === String(currentUserId)) await initUser();
+          }
+        });
+      });
     }
   </script>
 </body>
-</html>
+</html>сссссс
